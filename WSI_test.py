@@ -3,3 +3,10 @@
 PreFLMR: Scaling Up Fine-Grained Late-Interaction Multi-modal Retrievers——框架图
 Richer fusion network for breast cancer classification based on multimodal data——WSI+结构化数据
 '''
+'''
+2024年10月7日
+需要融合image data与structured EMR data
+重点参考richer fusion network
+
+首先解决WSI处理问题，如何extract特征
+'''
