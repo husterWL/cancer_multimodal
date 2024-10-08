@@ -10,3 +10,12 @@ Richer fusion network for breast cancer classification based on multimodal data�
 
 首先解决WSI处理问题，如何extract特征
 '''
+#读取
+
+import numpy as np
+import cv2
+import matplotlib.pyplot as plt
+import os
+import skimage.io as skio
+import openslide
+
