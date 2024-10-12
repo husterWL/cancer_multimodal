@@ -10,16 +10,15 @@ Richer fusion network for breast cancer classification based on multimodal data�
 
 首先解决WSI处理问题，如何extract特征
 '''
-#读取
-# OPENSLIDE_PATH = 'D:/Anaconda_WL/openslide-bin-4.0.0.6-windows-x64/bin'
 
-# import os
-# if hasattr(os, 'add_dll_directory'):
-#     # Windows
-#     with os.add_dll_directory(OPENSLIDE_PATH):
-#         import openslide
-# else:
-#     import openslide
+
+'''
+具体可参考clam仓库
+https://github.com/mahmoodlab/CLAM
+'''
+
+#读取
+
 import numpy as np
 import cv2
 import matplotlib.pyplot as plt
