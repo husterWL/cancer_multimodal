@@ -26,3 +26,32 @@ import os
 import skimage.io as skio
 import openslide
 
+# slidelist = os.listdir("D:/BaiduNetdiskDownload/mutimodal_breast_cancer/Benign_pathological_image1")
+# "C:/Users/WL/Desktop/benign_S0000004_1.tiff"
+
+# slidelist = os.listdir("C:/Users/WL/Desktop/image")
+# for slidei in slidelist[:]:
+#     print(slidei)
+#     idi = slidei.split('_')[1]
+#     print(idi)
+    
+    
+#     # open slide.svs
+#     slide_0 = openslide.OpenSlide('C:/Users/WL/Desktop/image/{}'.format(slidei))
+#     levels = slide_0.level_dimensions
+#     print("stored slide size pyramid",levels)
+
+    # # fetch levels[2] size of whole WSI region 
+    # slide = slide_0.read_region((0,0),2,levels[2])
+    # slide = np.asarray(slide)
+    # print("fetched shape",slide.shape)
+
+    # # origin slide is in RGBA format, convert it to RGB and save to model data dir
+    # slide = cv2.cvtColor(slide, cv2.COLOR_RGBA2RGB)
+    # skio.imsave('../data/WSI/slide_{}.png'.format(idi),slide.astype("uint8"))
+    # plt.imshow(slide)
+    # plt.show()
+
+slide_0 = openslide.OpenSlide('C:/Users/WL/Desktop/image/benign_S0000004_1.tif')
+levels = slide_0.level_dimensions
+print("stored slide size pyramid", levels)
