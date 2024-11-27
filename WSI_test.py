@@ -43,9 +43,9 @@ for slidei in slidelist[:]:
     print("stored slide size pyramid",levels)
 
     # fetch levels[2] size of whole WSI region 
-    slide = slide_0.read_region((0, 0), 1, levels[0])
-    slide = np.asarray(slide)
-    print("fetched shape", slide.shape)
+    # slide = slide_0.read_region((0, 0), 1, levels[0])
+    # slide = np.asarray(slide)
+    # print("fetched shape", slide.shape)
 
     # origin slide is in RGBA format, convert it to RGB and save to model data dir
     # slide = cv2.cvtColor(slide, cv2.COLOR_RGBA2RGB)
