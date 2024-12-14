@@ -58,19 +58,20 @@ for id in filenames:
 
 # frame.to_csv(r'D:\BaiduNetdiskDownload\mutimodal_breast_cancer\Image_list_new.csv')           
 
-def process_csv(file_name):
-    root = 'D:\BaiduNetdiskDownload\multimodal_breast_cancer\Result_directory'
-    path = root + '\\' + file_name + '.csv'
-    with open(path) as csvfile:
-        read = csv.reader(csvfile)
-        for row in read:
-            if row[0].strip() == 'slide_id':
-                continue
-            slide_id = (re.match(r'^[^\.]+', row[0].strip()).group(0))
-            # print(slide_id)
-            jpg = root + '\\' +'stitches' + '\\' + slide_id + '.jpg'
-            if not os.path.exists(jpg):
-                print(slide_id)
+# def process_csv(file_name):
+#     root = 'D:\BaiduNetdiskDownload\multimodal_breast_cancer\Result_directory'
+#     path = root + '\\' + file_name + '.csv'
+#     with open(path) as csvfile:
+#         read = csv.reader(csvfile)
+#         for row in read:
+#             if row[0].strip() == 'slide_id':
+#                 continue
+#             slide_id = (re.match(r'^[^\.]+', row[0].strip()).group(0))
+#             # print(slide_id)
+#             jpg = root + '\\' +'stitches' + '\\' + slide_id + '.jpg'
+#             if not os.path.exists(jpg):
+#                 print(slide_id)
 
 
-process_csv('Malignant_pathological_image7')
+# process_csv('Malignant_pathological_image7')
+
