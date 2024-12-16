@@ -1,4 +1,3 @@
-# 利用pytorch先简单复现richer fusion network一文
 
 #训练与测试_主体
 
