@@ -45,9 +45,7 @@ def read_tensor(labelfile, tensor_path):
 
     return tensor_list
 
-def split_dataset(path, train_ratio, valid_ratio, test_ratio):   #分割数据集
-    '''还得重写'''
-    data = os.listdir(path)
+def split_dataset(data, train_ratio, valid_ratio, test_ratio):   #分割数据集
     assert train_ratio + valid_ratio + test_ratio == 1, 'Ratio error.'   #判断划分是否正确
     
     train_nums = int(len(data) * train_ratio)
@@ -55,13 +53,12 @@ def split_dataset(path, train_ratio, valid_ratio, test_ratio):   #分割数据�
     test_nums = int(len(data) * test_ratio)
     
     train, valid, test = [], [], []
-    for root, dirs, files in os.walk(path):
-        random.shuffle(files)   #打乱文件顺序
-        for file in files:
-            if len(train) < train_nums:
-                train.append(os.path.join(root, file))
-            elif len(valid) < valid_nums:
-                valid.append(os.path.join(root, file))
-            else:
-                test.append(os.path.join(root, file))
+    random.shuffle(data)
+    for tensor in data:
+        if len(train) < train_nums:
+            train.append(tensor)
+        elif len(valid) < valid_nums:
+            valid.append(tensor)
+        else:
+            test.append(tensor)
     return train, valid, test
