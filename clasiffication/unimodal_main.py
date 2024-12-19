@@ -2,9 +2,34 @@ import torch
 import argparse
 from Config import config
 import matplotlib.pyplot as plt
+from utils.uni_dataprocess import read_tensor, split_dataset
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--do_train', action='store_true', help='训练模型')
+
+processor = Processor(config)
+from model.Unimodal_vision import VisionModel
+
+model = VisionModel(config)
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+trainer = Trainer(config, processor, model, device)
+
+def train():
+    data = read_tensor(config.labelfile, config.tensor_path)
+    train_data, val_data = split_dataset(data)
+    
+    #不需要processor
+    best_acc = 0.0
+    epoch = config.epoch
+    tloss_list, vloss_list = [], []
+    acc_list = []
+    precision = []
+    recall = []
+    f1 = []
+    Range = range(0, epoch)
+    for e in range(epoch):
+        print('-' * 20 + ' ' + 'Epoch ' + str(e+1) + ' ' + '-' * 20)
+        
 
 if __name__ == '__main__':
     args = parser.parse_args()
