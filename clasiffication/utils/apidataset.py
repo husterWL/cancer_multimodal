@@ -27,3 +27,20 @@ class apidataset(Dataset):
     def collate_fn(self, batch):  #用于将数据集中的每个样本转换为一个批次，以便在训练和测试过程中使用。
         guids, EHRs, imgs, labels = map(list, zip(*batch))
         return guids, torch.tensor(EHRs).long(), torch.tensor(imgs).float(), torch.tensor(labels).long()
+    
+class uniapidataset(Dataset):
+
+    def __init__(self, tensors, labels):
+        super().__init__()
+        self.tensors = tensors
+        self.labels = labels
+    
+    def __len__(self):
+        return len(self.tensors)
+    
+    def __getitem__(self, index):
+        return self.tensors[index], self.labels[index]
+    
+    def collate_fn(self, batch):
+        tensors, labels = map(list, zip(*batch))
+        return torch.tensor(tensors).float(), torch.tensor(labels).long()

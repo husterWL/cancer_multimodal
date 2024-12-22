@@ -8,10 +8,12 @@ from torch.utils.data import DataLoader
 '''
 这里需要导入encode、decode、metric以及dataset的API
 '''
-from apidataset import api_dataset
+from apidataset import apidataset
+from apidataset import uniapidataset
 from apiencode import api_encode
 from apidecode import api_decode
 from apimetric import api_metric
+import tqdm
 
 class LabelVocabulary:
     UNK = 'UNK'
@@ -54,8 +56,39 @@ class Processor:
     
     def to_dataset(self, data):
         dataset_inputs = self.encode(data)
-        return api_dataset(*dataset_inputs)
+        return apidataset(*dataset_inputs)
     
+    def to_loader(self, data, parameters):
+        dataset = self.to_dataset(data)
+        return DataLoader(dataset=dataset, **parameters, collate_fn=dataset.collate_fn)
+
+class Uni_processor:
+    def __init__(self, config) -> None:
+        self.config = config
+        self.labelvocab = LabelVocabulary()
+    
+    def __call__(self, data, parameters):
+        return self.to_loader(data, parameters)
+
+    def encode(self, data):
+        self.labelvocab.add_label('benigh')
+        self.labelvocab.add_label('maglinant')
+        tensors, encoded_labels = [], []
+
+        for line in tqdm(data, desc='----- [Encoding]'):
+            tensor, label = line['tensor'], line['label']
+            tensors.append(tensor)
+            encoded_labels.append(label)
+
+        return (tensors, encoded_labels)
+    
+    def metric(self, inputs, outputs):
+        return api_metric(inputs, outputs)
+    
+    def to_dataset(self, data):
+        dataset_inputs = self.encode(data)
+        return uniapidataset(*dataset_inputs)
+
     def to_loader(self, data, parameters):
         dataset = self.to_dataset(data)
         return DataLoader(dataset=dataset, **parameters, collate_fn=dataset.collate_fn)

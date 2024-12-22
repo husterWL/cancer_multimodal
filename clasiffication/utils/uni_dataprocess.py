@@ -62,3 +62,8 @@ def split_dataset(data, train_ratio, valid_ratio, test_ratio):   #分割数据�
         else:
             test.append(tensor)
     return train, valid, test
+
+def get_loader(data, batch_size):
+    dataset = Dataset(data)
+    return DataLoader(dataset, batch_size=batch_size, shuffle=True)
+

@@ -17,9 +17,9 @@ sys.path.append('./Utils')
 import torch
 import argparse
 from Config import config
-from Utils.common import data_format, read_from_file, train_val_split, save_model, write_to_file, loss_draw, acc_draw, macro_draw
-from Utils.DataProcess import Processor
-from Trainer import Trainer
+from utils.common import data_format, read_from_file, train_val_split, save_model, write_to_file, loss_draw, acc_draw, macro_draw
+from utils.dataprocess import Processor
+from trainer import Trainer
 import matplotlib.pyplot as plt
 
 #消除警告信息。警告信息说明对应的加载的预训练模型与任务类型不完全对应。
