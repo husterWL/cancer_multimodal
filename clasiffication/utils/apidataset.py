@@ -24,6 +24,13 @@ class apidataset(Dataset):
     def __getitem__(self, index):
         return self.guids[index], self.EHRs[index], self.imgs[index], self.labels[index]
     
+    '''
+    有问题的collate_fn函数
+    def collate_fn(self, batch):  #用于将数据集中的每个样本转换为一个批次，以便在训练和测试过程中使用。
+        guids, EHRs, imgs, labels = map(list, zip(*batch))
+        return torch.tensor(EHRs).long(), torch.tensor(imgs).float(), torch.tensor(labels).long()
+    '''
+
     def collate_fn(self, batch):  #用于将数据集中的每个样本转换为一个批次，以便在训练和测试过程中使用。
         guids, EHRs, imgs, labels = map(list, zip(*batch))
         return guids, torch.tensor(EHRs).long(), torch.tensor(imgs).float(), torch.tensor(labels).long()
@@ -42,5 +49,24 @@ class uniapidataset(Dataset):
         return self.tensors[index], self.labels[index]
     
     def collate_fn(self, batch):
-        tensors, labels = map(list, zip(*batch))
-        return torch.tensor(tensors).float(), torch.tensor(labels).long()
+        # tensors, labels = map(list, zip(*batch))
+        # return torch.tensor(tensors).float(), torch.tensor(labels).long()
+        # print((b[0] for b in batch))
+        # tensors = (b[0] for b in batch)
+        # labels = torch.LongTensor(b[1] for b in batch)
+
+        # def collate_fn(self, batch):
+        #     tensors = [b[0] for b in batch]
+        #     labels = torch.LongTensor([b[1] for b in batch])
+        #     return tensors, labels
+
+
+        # for b in batch:
+        #     tensors = [b[0]]
+        #     labels = torch.LongTensor([b[1]])
+
+        tensors = [b[0] for b in batch]
+        for b in batch:
+            print(b[1])
+
+        # return tensors, labels

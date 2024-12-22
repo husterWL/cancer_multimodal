@@ -19,8 +19,6 @@ from torch.utils.data import DataLoader
 # print(tensor_cancer.shape)  # 输出：torch.Size([patchs_num, 1048])
 # print(tensor_cancer[1])
 
-tensor_path = r'D:\BaiduNetdiskDownload\multimodal_breast_cancer\Features_directory\pt_files'
-labelfile = r'D:\BaiduNetdiskDownload\multimodal_breast_cancer\Image_list_new.csv'
 
 def read_tensor(labelfile, tensor_path):
     tensor_list = []
@@ -40,7 +38,8 @@ def read_tensor(labelfile, tensor_path):
                 case = {'tensor': tensor[i], 'label': label}
                 tensor_list.append(case)
 
-    # print(len(tensor_list))
+    print(len(tensor_list))
+    print(tensor_list[0])
     print("读取完成")
 
     return tensor_list

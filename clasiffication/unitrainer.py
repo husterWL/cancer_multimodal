@@ -9,9 +9,10 @@ class Trainer():
         self.model = model.to(device)
         self.device = device
 
-        parameters = list(model.named_parameters())
+        # parameters = list(model.named_parameters())
+        parameters = [param for name, param in model.named_parameters()]
 
-        self.optimizer = optim.Adam(params = parameters, lr=config.learning_rate)
+        self.optimizer = optim.Adam(params = parameters, lr = config.learning_rate)
 
     def train(self, train_loader):
         self.model.train()

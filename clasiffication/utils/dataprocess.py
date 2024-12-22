@@ -13,7 +13,7 @@ from apidataset import uniapidataset
 from apiencode import api_encode
 from apidecode import api_decode
 from apimetric import api_metric
-import tqdm
+from tqdm import tqdm
 
 class LabelVocabulary:
     UNK = 'UNK'
@@ -60,7 +60,7 @@ class Processor:
     
     def to_loader(self, data, parameters):
         dataset = self.to_dataset(data)
-        return DataLoader(dataset=dataset, **parameters, collate_fn=dataset.collate_fn)
+        return DataLoader(dataset = dataset, **parameters, collate_fn = dataset.collate_fn)
 
 class Uni_processor:
     def __init__(self, config) -> None:
@@ -68,7 +68,7 @@ class Uni_processor:
         self.labelvocab = LabelVocabulary()
     
     def __call__(self, data, parameters):
-        return self.to_loader(data, parameters)
+        return self.to_loader(data, parameters) #返回的是一个DataLoader对象，data的格式为：[{'tensor': tensor, 'label': label}, ...]
 
     def encode(self, data):
         self.labelvocab.add_label('benigh')
@@ -80,7 +80,9 @@ class Uni_processor:
             tensors.append(tensor)
             encoded_labels.append(label)
 
-        return (tensors, encoded_labels)
+        print(tensors[0])
+        print(encoded_labels[0])
+        return tensors, encoded_labels
     
     def metric(self, inputs, outputs):
         return api_metric(inputs, outputs)
@@ -91,4 +93,4 @@ class Uni_processor:
 
     def to_loader(self, data, parameters):
         dataset = self.to_dataset(data)
-        return DataLoader(dataset=dataset, **parameters, collate_fn=dataset.collate_fn)
+        return DataLoader(dataset = dataset, **parameters, collate_fn = dataset.collate_fn)

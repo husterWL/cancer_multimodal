@@ -6,34 +6,31 @@ import torch.nn as nn
 from Config import config
 import torchvision.models as models
 
-class VisionModel(nn.Module):
-
-    def __init__(self):
-        super(VisionModel, self).__init__()
-        # 使用预训练的resnet101模型，删除最后的3层
-        self.features = models.resnet101(pretrained=True)
-        self.features.fc = nn.Sequential()
-
-    def forward(self, images):
-        x = self.features(images)
-        return x
     
-class NeuralNet(nn.Module):
+class Univision(nn.Module):
 
-    def __init__(self):
-        super(NeuralNet, self).__init__()
-        # 使用两个全连接层进行分类
-        self.fc1 = nn.Linear(2048, 512)
-        self.fc2 = nn.Linear(512, config.num_classes)
-        # 使用relu和dropout作为激活函数
-        self.relu = nn.ReLU()
-        self.dropout = nn.Dropout(p=0.5)
+    def __init__(self, config):
+        super(Univision, self).__init__()
+        
+        self.classifier = nn.Sequential(
+            nn.Dropout(config.first_dropout),
+            nn.Linear(config.middle_hidden_dimension, config.output_hidden_dimension),
+            nn.ReLU(inplace = True),
+            nn.Dropout(config.last_dropout),
+            nn.Linear(config.output_hidden_dimension, config.num_labels),
+            # 使用relu和dropout作为激活函数
+            nn.Softmax2d()
+            
+        )
+        self.loss_func = nn.CrossEntropyLoss()
 
-    def forward(self, features):
-        x = features
-        x = x.view(x.size(0), -1)
-        x = self.fc1(x)
-        x = self.relu(x)
-        x = self.dropout(x)
-        x = self.fc2(x)
-        return x
+    def forward(self, tensors, labels = None):
+        features = tensors
+        prob_vector = self.classifier(features)
+        pred_labels = torch.argmax(prob_vector, dim = 1)
+
+        if labels is not None:  #train、valid、test
+            loss = self.loss_func(prob_vector, labels)
+            return pred_labels, loss
+        else:
+            return pred_labels  #predict

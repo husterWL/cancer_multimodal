@@ -25,5 +25,5 @@ tensor = torch.load('tensor.pt')
 tensor_cancer = torch.load(
     r"D:\BaiduNetdiskDownload\multimodal_breast_cancer\Features_directory\pt_files\benign_S0000004_1.pt")
 
-print(tensor_cancer.shape)  # 输出：torch.Size([patchs_num, 1048])
-print(tensor_cancer[1])
+print(tensor_cancer.shape)  # 输出：torch.Size([patchs_num, 1024])
+print(tensor_cancer[1].dtype)   #torch.Size([48, 1024]) 输出：torch.float32

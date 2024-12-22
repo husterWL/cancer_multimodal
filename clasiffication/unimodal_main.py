@@ -1,4 +1,6 @@
 import os
+import sys
+sys.path.append('./utils')
 import torch
 import argparse
 from Config import config
@@ -9,18 +11,29 @@ from utils.dataprocess import Uni_processor
 from unitrainer import Trainer
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--do_train', action='store_true', help='训练模型')
+parser.add_argument('--do_train', action = 'store_true', help = '训练模型')
+parser.add_argument('--lr', default = 1e-5, help = '设置学习率', type = float)
+parser.add_argument('--weight_decay', default = 1e-3, help = '设置权重衰减', type = float)
+parser.add_argument('--epoch', default = 10, help = '设置训练轮数', type = int)
+parser.add_argument('--do_test', action = 'store_true', help = '预测测试集数据')
+parser.add_argument('--load_model_path', default = None, help = '已经训练好的模型路径', type = str)
+args = parser.parse_args()
+config.learning_rate = args.lr
+config.weight_decay = args.weight_decay
+config.epoch = args.epoch
+config.load_model_path = args.load_model_path
+
 
 processor = Uni_processor(config)
-from model.Unimodal_vision import VisionModel
+from model.Unimodal_vision import Univision
 
-model = VisionModel(config)
+model = Univision(config)
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 trainer = Trainer(config, processor, model, device)
 
 def train():
     data = read_tensor(config.labelfile, config.tensor_path)
-    train_data, val_data = split_dataset(data)
+    train_data, val_data, _ = split_dataset(data, config.train_ratio, config.valid_ratio, config.test_ratio)
     train_loader = processor(train_data, config.train_params)
     val_loader = processor(val_data, config.test_params)
     
