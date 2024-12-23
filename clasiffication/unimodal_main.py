@@ -46,6 +46,7 @@ def train():
     recall = []
     f1 = []
     Range = range(0, epoch)
+    print('这是range的类型', type(Range))
     for e in range(epoch):
         print('-' * 20 + ' ' + 'Epoch ' + str(e+1) + ' ' + '-' * 20)
         tloss, tlosslist = trainer.train(train_loader) #参数是一个Dataloader实例对象，用train函数进行训练，返回训练损失和损失列表
@@ -57,9 +58,9 @@ def train():
         tloss_list.append(tloss)
         vloss_list.append(vloss)
         acc_list.append(report_dict['accuracy'])
-        precision.append(report_dict['precision'])
-        recall.append(report_dict['recall'])
-        f1.append(report_dict['f1-score'])
+        precision.append(report_dict['weighted avg']['precision'])
+        recall.append(report_dict['weighted avg']['recall'])
+        f1.append(report_dict['weighted avg']['f1-score'])
         print('accuracy:{}'.format(report_dict['accuracy']))
 
         '''
@@ -72,13 +73,13 @@ def train():
         print()
 
         #损失曲线
-        loss_draw(tloss_list, vloss_list, Range, os.path.join(config.output_path, 'loss_curve.jpg'))
+    loss_draw(tloss_list, vloss_list, Range, os.path.join(config.output_path, 'loss_curve.jpg'))
 
         #准确率曲线
-        acc_draw(acc_list, Range, os.path.join(config.output_path, 'accuracy_curve.jpg'))
+    acc_draw(acc_list, Range, os.path.join(config.output_path, 'accuracy_curve.jpg'))
 
         #macro曲线
-        other_draw(precision, recall, f1, Range, os.path.join(config.output_path, 'other_curve.jpg'))
+    other_draw(precision, recall, f1, Range, os.path.join(config.output_path, 'other_curve.jpg'))
 
 def test():
     data = read_tensor(config.labelfile, config.tensor_path)

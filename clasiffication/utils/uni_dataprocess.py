@@ -6,6 +6,7 @@ import pandas as pd
 import re
 from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
+import json
 
 '''
 1、特征向量的读取
@@ -23,15 +24,22 @@ from torch.utils.data import DataLoader
 def read_tensor(labelfile, tensor_path):
     tensor_list = []
     df_label = pd.read_csv(labelfile)
-    print(df_label.head())
+    # print(df_label.head())
+    benign_num = 0
+    malignant_num = 0
+
     for root, dirs, files in os.walk(tensor_path):
         for file in files:
             name = re.match(r'^[^\.]+', file).group(0)
-            # print(name)
-            if name in df_label.loc[df_label['slide_id'] == name, 'label'].values == 'normal_tissue':
+            # print(name)     #python unimodal_main.py --do_train
+            if df_label.loc[df_label['slide_id'] == name, 'label'].values == 'normal_tissue':   #逻辑错误
+                '''这一行的逻辑是错误的，因为 name in df_label.loc[df_label['slide_id'] == name, 'label'].values 
+                这个表达式的结果是一个布尔值（True 或 False）'''
                 label = 'benign'
+                benign_num += 1
             else:
                 label = 'malignant'
+                malignant_num += 1
             tensor = torch.load(os.path.join(root, file))
             # print(len(tensor))  # 输出：torch.Size([patchs_num, 1048])
             for i in range(len(tensor)):
@@ -39,7 +47,8 @@ def read_tensor(labelfile, tensor_path):
                 tensor_list.append(case)
 
     print(len(tensor_list))
-    print(tensor_list[0])
+    # print(tensor_list[0])
+    print("benign:", benign_num, "malignant:", malignant_num)   #benign: 0 malignant: 3693
     print("读取完成")
 
     return tensor_list
@@ -60,6 +69,7 @@ def split_dataset(data, train_ratio, valid_ratio, test_ratio):   #分割数据�
             valid.append(tensor)
         else:
             test.append(tensor)
+    
     return train, valid, test
 
 def get_loader(data, batch_size):

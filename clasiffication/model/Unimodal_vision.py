@@ -18,8 +18,7 @@ class Univision(nn.Module):
             nn.ReLU(inplace = True),
             nn.Dropout(config.last_dropout),
             nn.Linear(config.output_hidden_dimension, config.num_labels),
-            # 使用relu和dropout作为激活函数
-            nn.Softmax2d()
+            # nn.Softmax()
             
         )
         self.loss_func = nn.CrossEntropyLoss()

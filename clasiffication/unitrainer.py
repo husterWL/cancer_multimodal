@@ -20,7 +20,9 @@ class Trainer():
         true_labels, pred_labels = [], []
 
         for batch in tqdm(train_loader, desc = '-----------【Traing】'):
+            # print(type(batch))
             tensors, labels = batch
+            # print(type(tensors), type(labels))
             tensors, labels = tensors.to(self.device), labels.to(self.device)
             pred, loss = self.model(tensors, labels=labels)
             loss_list.append(loss.item())

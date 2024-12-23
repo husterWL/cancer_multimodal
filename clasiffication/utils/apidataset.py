@@ -64,9 +64,10 @@ class uniapidataset(Dataset):
         # for b in batch:
         #     tensors = [b[0]]
         #     labels = torch.LongTensor([b[1]])
-
+        
         tensors = [b[0] for b in batch]
-        for b in batch:
-            print(b[1])
+        tensors = torch.stack(tensors)
+        labels = torch.LongTensor([b[1] for b in batch])
 
-        # return tensors, labels
+        # print(type(tensors), type(labels))
+        return tensors, labels

@@ -6,6 +6,8 @@ class config:
     tensor_path = r'D:\BaiduNetdiskDownload\multimodal_breast_cancer\Features_directory\pt_files'
     labelfile = r'D:\BaiduNetdiskDownload\multimodal_breast_cancer\Image_list_new.csv'
     load_model_path = None
+    output_path = r'D:\BaiduNetdiskDownload\multimodal_breast_cancer\_model'
+    fuse_model_type = 'unimodal'
 
 
     #some parameters
