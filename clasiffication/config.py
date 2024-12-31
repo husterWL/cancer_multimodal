@@ -5,8 +5,8 @@ class config:
     #some paths
     tensor_path = r'D:\BaiduNetdiskDownload\multimodal_breast_cancer\Features_directory\pt_files'
     labelfile = r'D:\BaiduNetdiskDownload\multimodal_breast_cancer\Image_list_new.csv'
-    load_model_path = None
-    output_path = r'D:\BaiduNetdiskDownload\multimodal_breast_cancer\_model'
+    load_model_path = r'D:\BaiduNetdiskDownload\multimodal_breast_cancer\_model\unimodal\pytorch_model.bin'
+    output_path = r'D:\BaiduNetdiskDownload\multimodal_breast_cancer\_model1'
     fuse_model_type = 'unimodal'
 
 

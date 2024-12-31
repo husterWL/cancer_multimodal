@@ -6,7 +6,7 @@ import torch.nn as nn
 from Config import config
 import torchvision.models as models
 
-    
+
 class Univision(nn.Module):
 
     def __init__(self, config):

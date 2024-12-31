@@ -44,7 +44,7 @@ class Trainer():
         for batch in tqdm(valid_lodaer, desc='----- [Validing] '):
             tensors, labels = batch
             tensors, labels = tensors.to(self.device), labels.to(self.device)
-            pred, loss = self.model(tensors, labels=labels)
+            pred, loss = self.model(tensors, labels = labels)
 
             # metric
             val_loss += loss.item()
@@ -65,7 +65,7 @@ class Trainer():
         for batch in tqdm(test_loader, desc='----- [Predicting] '):
             tensors, labels = batch
             tensors, labels = tensors.to(self.device), labels.to(self.device)
-            pred, loss = self.model(tensors)
+            pred, loss = self.model(tensors, labels = labels)
 
             test_loss += loss.item()
             true_labels.extend(labels.tolist())

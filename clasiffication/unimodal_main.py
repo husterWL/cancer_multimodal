@@ -12,8 +12,8 @@ from unitrainer import Trainer
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--do_train', action = 'store_true', help = '训练模型')
-parser.add_argument('--lr', default = 1e-5, help = '设置学习率', type = float)
-parser.add_argument('--weight_decay', default = 1e-3, help = '设置权重衰减', type = float)
+parser.add_argument('--lr', default = 1e-4, help = '设置学习率', type = float)
+parser.add_argument('--weight_decay', default = 1e-4, help = '设置权重衰减', type = float)
 parser.add_argument('--epoch', default = 10, help = '设置训练轮数', type = int)
 parser.add_argument('--do_test', action = 'store_true', help = '预测测试集数据')
 parser.add_argument('--load_model_path', default = None, help = '已经训练好的模型路径', type = str)
@@ -83,7 +83,7 @@ def train():
 
 def test():
     data = read_tensor(config.labelfile, config.tensor_path)
-    _, _, test_data = split_dataset(data)
+    _, _, test_data = split_dataset(data, config.train_ratio, config.valid_ratio, config.test_ratio)
 
     test_loader = processor(test_data, config.test_params)
 
@@ -98,9 +98,9 @@ def test():
     print('Test Loss: {}'.format(tloss))
     print('Test Acc: {}'.format(tacc))
     print('accuracy:{}'.format(report_dict['accuracy']), '\n', 
-          'precision:{}'.format(report_dict['precision']), '\n',
-          'recall:{}'.format(report_dict['recall']), '\n', 
-          'f1-score:{}'.format(report_dict['f1-score']))
+          'precision:{}'.format(report_dict['weighted avg']['precision']), '\n',
+          'recall:{}'.format(report_dict['weighted avg']['recall']), '\n', 
+          'f1-score:{}'.format(report_dict['weighted avg']['f1-score']))
 
 if __name__ == '__main__':
     args = parser.parse_args()
