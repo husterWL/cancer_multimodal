@@ -1,13 +1,11 @@
-'''
-使用单一的视觉进行良恶性分类
-'''
 import torch
 import torch.nn as nn
 from Config import config
 import torchvision.models as models
 
-FCN = models.segmentation.fcn_resnet50(pretrained = True)
-
+'''
+加入电子病历数据，提高模型性能
+'''
 
 class Univision(nn.Module):
 
@@ -34,4 +32,21 @@ class Univision(nn.Module):
             loss = self.loss_func(prob_vector, labels)
             return pred_labels, loss
         else:
-            return pred_labels  #predict
+            return pred_labels  #predic
+class Uniemr(nn.Module):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def forward(self, *args, **kwargs):
+        pass
+
+class Fusemodel(nn.Module):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.univision = Univision()
+        self.uniemr = Uniemr()
+
+    def forward(self, *args, **kwargs):
+        pass

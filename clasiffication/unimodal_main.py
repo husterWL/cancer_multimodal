@@ -5,10 +5,12 @@ import torch
 import argparse
 from Config import config
 import matplotlib.pyplot as plt
-from utils.uni_dataprocess import read_tensor, split_dataset
+from clasiffication.utils.data_read import read_tensor, split_dataset
 from utils.common import save_model, loss_draw, acc_draw, other_draw
 from utils.dataprocess import Uni_processor
 from unitrainer import Trainer
+from early_stopping_pytorch import EarlyStopping
+
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--do_train', action = 'store_true', help = '训练模型')
@@ -80,6 +82,26 @@ def train():
 
         #macro曲线
     other_draw(precision, recall, f1, Range, os.path.join(config.output_path, 'other_curve.jpg'))
+
+
+    '''
+    早停
+    from early_stopping_pytorch import EarlyStopping
+
+    # Initialize early stopping object
+    early_stopping = EarlyStopping(patience=7, verbose=True)
+
+    # In your training loop:
+    for epoch in range(num_epochs):
+        # ... training code ...
+        val_loss = ... # calculate validation loss
+
+        # Early stopping call
+        early_stopping(val_loss, model)
+        if early_stopping.early_stop:
+            print("Early stopping triggered")
+            break
+    '''
 
 def test():
     data = read_tensor(config.labelfile, config.tensor_path)

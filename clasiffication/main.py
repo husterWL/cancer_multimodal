@@ -1,19 +1,14 @@
-
-#训练与测试_主体
-
 import os
 # os.environ['CURL_CA_BUNDLE'] = ''
-os.environ["TOKENIZERS_PARALLELISM"] = "false"
-import warnings
-warnings.filterwarnings("ignore")
-
+# os.environ["TOKENIZERS_PARALLELISM"] = "false"
+# import warnings
+# warnings.filterwarnings("ignore")
 '''
 在导入模块时，Python会查找sys.path中列出的目录。默认情况下，Python会将当前目录添加到sys.path中。
 如果你在不同的目录中运行你的代码，你可能需要手动添加包含你的模块的目录到sys.path中。
 '''
 import sys
 sys.path.append('./Utils')
-# sys.path.append('./Utils/APIs')
 import torch
 import argparse
 from Config import config
@@ -27,11 +22,7 @@ from transformers import logging
 logging.set_verbosity_error()
 
 # args 参数
-'''
-argparse模块是Python标准库中的一个模块，它的主要作用是处理命令行参数。
-通过使用argparse模块，开发者可以指定脚本需要的参数，包括参数的类型、名字、缩写、数据类型、描述信息等。
-这样，用户就可以通过命令行直接为脚本指定参数，而无需在脚本内部修改参数。
-'''
+
 parser = argparse.ArgumentParser()
 parser.add_argument('--do_train', action='store_true', help='训练模型')
 '''
@@ -42,46 +33,29 @@ parser.add_argument('--do_train', action='store_true', help='训练模型')
 在命令行中使用这些参数时，可以使用"--参数名"的形式来指定参数的值。
 例如，如果要设置学习率为0.001，可以在命令行中使用"--lr 0.001"来指定。
 '''
-parser.add_argument('--text_pretrained_model', default = 'roberta-base', help = '文本分析模型', type = str)
 parser.add_argument('--fuse_model_type', default = 'MultiAttention', help = '融合模型类别', type=str)
 parser.add_argument('--lr', default = 1e-5, help = '设置学习率', type = float)
 parser.add_argument('--weight_decay', default = 1e-3, help = '设置权重衰减', type = float)
 parser.add_argument('--epoch', default = 10, help = '设置训练轮数', type = int)
+parser.add_argument('--do_test', action = 'store_true', help = '预测测试集数据')
+parser.add_argument('--load_model_path', default = None, help = '已经训练好的模型路径', type = str)
+# parser.add_argument('--text_only', action = 'store_true', help = '仅用文本预测')
+# parser.add_argument('--img_only', action = 'store_true', help = '仅用图像预测')
 
-parser.add_argument('--do_test', action='store_true', help='预测测试集数据')
-# parser.add_argument('--load_model_path', default=None, help='已经训练好的模型路径', type=str)
-parser.add_argument('--text_only', action='store_true', help='仅用文本预测')
-parser.add_argument('--img_only', action='store_true', help='仅用图像预测')
 args = parser.parse_args()
 config.learning_rate = args.lr
 config.weight_decay = args.weight_decay
 config.epoch = args.epoch
-config.bert_name = args.text_pretrained_model
 config.fuse_model_type = args.fuse_model_type
 # config.load_model_path = args.load_model_path
-config.load_model_path = os.path.join('d:/BaiduNetdiskDownload/output', args.fuse_model_type, './pytorch_model.bin')
-config.only = 'img' if args.img_only else None
-config.only = 'text' if args.text_only else None
-if args.img_only and args.text_only: config.only = None
-print('TextModel: {}, ImageModel: {}, FuseModel: {}'.format(config.bert_name, 'ResNet50', config.fuse_model_type))
+# config.only = 'img' if args.img_only else None
+# if args.img_only and args.text_only: config.only = None
+
 
 
 # Initilaztion 初始化 在这里选择模型
 processor = Processor(config)   #Processor类的实例对象
-# if config.fuse_model_type == 'CMAC' or config.fuse_model_type == 'CrossModalityAttentionCombine':
-#     from Model.CMACModel import FuseModel
-# elif config.fuse_model_type == 'HSTEC' or config.fuse_model_type =='HiddenStateTransformerEncoder':
-#     from Model.HSTECModel import FuseModel
-# elif config.fuse_model_type == 'OTE' or config.fuse_model_type == 'OutputTransformerEncoder':
-#     from Model.OTEModel import FuseModel
-# elif config.fuse_model_type == 'NaiveCat':
-#     from Model.NaiveCatModel import FuseModel
-# elif config.fuse_model_type == 'NaiveCombine':
-#     from Model.NaiveCombineModel import FuseModel
-# else:
-#     from Model.BERT_RESNET_SA import FuseModel
-
-from Model.model1 import FuseModel
+from model.Fuse_Model import FuseModel
 
 model = FuseModel(config)
 device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')

@@ -4,7 +4,7 @@ from tqdm import tqdm
 
 class Trainer():            #训练器
 
-    def __init__(self, config, processor, model, device=torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')):
+    def __init__(self, config, processor, model, device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')):
         self.config = config
         self.processor = processor
         '''
