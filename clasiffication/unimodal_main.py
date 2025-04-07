@@ -5,8 +5,8 @@ import torch
 import argparse
 from Config import config
 import matplotlib.pyplot as plt
-from clasiffication.utils.data_read import read_tensor, split_dataset
-from utils.common import save_model, loss_draw, acc_draw, other_draw
+from utils.data_read import read_tensor, split_dataset
+from utils.common import save_model, loss_draw, acc_draw, other_draw, earlystop_draw
 from utils.dataprocess import Uni_processor
 from unitrainer import Trainer
 from early_stopping_pytorch import EarlyStopping
@@ -49,6 +49,9 @@ def train():
     f1 = []
     Range = range(0, epoch)
     print('这是range的类型', type(Range))
+
+    early_stop = EarlyStopping(patience = config.patience, verbose = True, path = config.output_path + '\\checkpoint2.pt')
+    
     for e in range(epoch):
         print('-' * 20 + ' ' + 'Epoch ' + str(e+1) + ' ' + '-' * 20)
         tloss, tlosslist = trainer.train(train_loader) #参数是一个Dataloader实例对象，用train函数进行训练，返回训练损失和损失列表
@@ -74,14 +77,26 @@ def train():
             print('Update best model!')
         print()
 
+        early_stop(vloss, trainer.model)
+  
+        if early_stop.early_stop:
+            print("Early stopping")
+            last_epoch = e + 1
+            print(last_epoch)
+            break
+
         #损失曲线
-    loss_draw(tloss_list, vloss_list, Range, os.path.join(config.output_path, 'loss_curve.jpg'))
+
+    loss_draw(tloss_list, vloss_list, (0, last_epoch), os.path.join(config.output_path, 'loss_curve.jpg'))
 
         #准确率曲线
-    acc_draw(acc_list, Range, os.path.join(config.output_path, 'accuracy_curve.jpg'))
+    acc_draw(acc_list, (0, last_epoch), os.path.join(config.output_path, 'accuracy_curve.jpg'))
 
         #macro曲线
-    other_draw(precision, recall, f1, Range, os.path.join(config.output_path, 'other_curve.jpg'))
+    other_draw(precision, recall, f1, (0, last_epoch), os.path.join(config.output_path, 'other_curve.jpg'))
+
+        #early_stop图
+    earlystop_draw(tloss_list, vloss_list, os.path.join(config.output_path, 'early_stop.jpg'))
 
 
     '''

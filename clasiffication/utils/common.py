@@ -52,7 +52,7 @@ def save_model(output_path, model_type, model):
     output_model_dir = os.path.join(output_path, model_type)    #输出模型的保存目录
     if not os.path.exists(output_model_dir): os.makedirs(output_model_dir)
     model_to_save = model.module if hasattr(model, 'module') else model     # Only save the model it-self
-    output_model_file = os.path.join(output_model_dir, "pytorch_model.bin")
+    output_model_file = os.path.join(output_model_dir, "pytorch_model_0407.bin")
     torch.save(model_to_save.state_dict(), output_model_file)
 
 def load_model(model, filename):
@@ -66,7 +66,7 @@ def loss_draw(tloss_list, vloss_list, x, dirc):
     ax.spines['top'].set_linewidth(4)
     ax.spines['right'].set_linewidth(4)
     plt.plot(x, tloss_list, 'k-', label = 'train_loss', linewidth = 2.0)
-    plt.plot(x, vloss_list, 'r--', label ='valid_loss', linewidth = 2.0)
+    plt.plot(x, vloss_list, 'r--', label ='vloss_list', linewidth = 2.0)
     plt.ylabel('loss', fontsize = 40)
     plt.xlabel('epoch', fontsize = 40)
     plt.rc('legend', fontsize = 40)
@@ -106,4 +106,26 @@ def other_draw(p, r, f1, x, dirc):
     plt.yticks(np.arange(0, 1.1, 0.1), fontsize = 40)
     plt.rc('legend', fontsize = 40)
     plt.legend(['precesion', 'recall', 'F1'], loc = 'upper right')
+    plt.savefig(dirc)
+
+def earlystop_draw(tloss_list, vloss_list, dirc):
+    pass
+    # visualize the loss as the network trained
+    fig = plt.figure(figsize=(32,24))
+    plt.plot(range(1,len(tloss_list)+1),tloss_list, label='Training Loss')
+    plt.plot(range(1,len(vloss_list)+1),vloss_list,label='Validation Loss')
+
+    # find position of lowest validation loss
+    minposs = vloss_list.index(min(vloss_list))+1 
+    plt.axvline(minposs, linestyle='--', color='r',label='Early Stopping Checkpoint')
+
+    plt.xlabel('epochs')
+    plt.ylabel('loss')
+    plt.ylim(0, 0.5) # consistent scale
+    plt.xlim(0, len(tloss_list)+1) # consistent scale
+    plt.grid(True)
+    plt.legend()
+    plt.tight_layout()
+    plt.show()
+    fig.savefig('loss_plot.png', bbox_inches='tight')
     plt.savefig(dirc)
