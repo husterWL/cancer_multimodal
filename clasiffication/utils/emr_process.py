@@ -32,7 +32,7 @@ EMR_FEATURES = [ 'Patient ID',
 
 def only_29dim(dataframe):
 
-    dataframe.replace(-1, np.nan, inplace=True)
+    dataframe.replace(-1, np.nan, inplace = True)
     columns_with_zero = [col for col in dataframe.columns if dataframe[col].isin([0]).any()]
     dataframe[columns_with_zero] = dataframe[columns_with_zero].apply(lambda x: x + 1).fillna(0)
 
@@ -49,8 +49,18 @@ def one_hot(dataframe):
 # for i in range(len(EMR_FEATURES[1:-1])):
 #     print(new[EMR_FEATURES[i+1]].value_counts())
 
-# only_29dim(df.loc[ : , EMR_FEATURES[1: -1]])
-# print(df.loc[df['Patient ID'] == 'S0000004', EMR_FEATURES[1: -1]].values)
+# df1 = only_29dim(df.loc[ : , EMR_FEATURES[1: -1]])
+# df1 = one_hot(df.loc[ : , EMR_FEATURES[1: -1]])
+# print(type(df))
+# print(df.columns)
+# print(df.shape)
+# print(df.index)
+# print(type(df1))
+# print(df1.columns)
+# print(df1.shape)
+# print(df1.index)
+
+# print(df1.loc[df['Patient ID'] == 'S0000004'].values)
 
 #大模型的扩充
 #使用TITAN对每一张WSI进行报告的生成

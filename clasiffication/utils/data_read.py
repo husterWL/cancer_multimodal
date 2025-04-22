@@ -78,11 +78,12 @@ def get_loader(data, batch_size):
     return DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
 def read_tensor_emr(labelfile, tensor_path, emr_path):
+
     tensor_emr_list = []
     df_label = pd.read_csv(labelfile)
     emr_df = pd.read_csv(emr_path)
-    only_29dim(emr_df.loc[:, EMR_FEATURES[1: -1]])
-    
+    # only_29dim(emr_df.loc[:, EMR_FEATURES[1: -1]])
+    emr_df_ = one_hot(emr_df.loc[:, EMR_FEATURES[1: -1]])
 
     benign_num = 0
     malignant_num = 0
@@ -98,8 +99,11 @@ def read_tensor_emr(labelfile, tensor_path, emr_path):
                 label = 'malignant'
                 malignant_num += 1
             tensor = torch.load(os.path.join(root, file))
-            emr = emr_df.loc[emr_df['Patient ID'] == name1, EMR_FEATURES[1: -1]].values[0]
+            # emr = emr_df.loc[emr_df['Patient ID'] == name1, EMR_FEATURES[1: -1]].values[0]
             #vaalues为：[[2 2 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 1 1 1 1 1 1 1 1 2 0 0 0]]
+
+            emr = emr_df_.loc[emr_df['Patient ID'] == name1].values[0]
+
             for i in range(len(tensor)):
                 case = {'tensor': tensor[i], 'emr': torch.LongTensor(emr), 'label': label}
                 tensor_emr_list.append(case)
@@ -113,7 +117,7 @@ def read_tensor_emr(labelfile, tensor_path, emr_path):
     '''
     [
     {'tensor': tensor([0.1110, 0.0138, 0.0240,  ..., 0.0090, 0.0068, 0.0405]), 
-    'emr': tensor([2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 2, 0, 0, 0]), 
+    'emr': tensor([2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 2, 0, 0, 0]), #或106维的向量
     'label': 'benign'}
     ]
     '''
@@ -123,4 +127,4 @@ def read_tensor_emr(labelfile, tensor_path, emr_path):
 # tensor_path = r'D:\BaiduNetdiskDownload\multimodal_breast_cancer\Features_directory\pt_files'
 # emr_path = r'D:\BaiduNetdiskDownload\multimodal_breast_cancer\EMR.csv'
 # list = read_tensor_emr(labelfile, tensor_path, emr_path)
-# print(list[0: 5])
+# print(list[0])
