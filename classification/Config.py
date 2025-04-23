@@ -8,7 +8,7 @@ class config:
     emr_path = r'D:\BaiduNetdiskDownload\multimodal_breast_cancer\EMR.csv'
     load_model_path = r'D:\BaiduNetdiskDownload\multimodal_breast_cancer\_model\unimodal\pytorch_model.bin'
     output_path = r'D:\BaiduNetdiskDownload\multimodal_breast_cancer\_model'
-    fuse_model_type = 'unimodal'
+    all_data_path = r'./data/data.json'
 
 
     #some parameters
@@ -27,6 +27,10 @@ class config:
     output_hidden_dimension = 512
     last_dropout = 0.2
     num_labels = 2
+
+    #fusion parameters
+    fuse_model_type = 'unimodal'
+    fusion_hidden_dimension = 1024
 
     # dataloader parameters
     train_params = {'batch_size': 16, 'shuffle': True, 'num_workers': 2}

@@ -9,10 +9,12 @@ from torch.utils.data import DataLoader
 import json
 from emr_process import EMR_FEATURES, only_29dim, one_hot
 
+print(os.getcwd())
+
 '''
 1、特征向量的读取
 2、划分训练集和测试集
-3、
+3、另存为数据文件，需要将单模态与多模态的数据划分应该一致，即单模态的各部分的id应该与多模态的各部分的id一致
 '''
 
 # tensor_cancer = torch.load(
@@ -92,6 +94,7 @@ def read_tensor_emr(labelfile, tensor_path, emr_path):
         for file in files:
             name = re.match(r'^[^\.]+', file).group(0)  #benign_S0000004_1
             name1 = name.split('_')[1]  #S0000004
+            name2 = name.split('_')[2]  
             if df_label.loc[df_label['slide_id'] == name, 'label'].values == 'normal_tissue':
                 label = 'benign'
                 benign_num += 1
@@ -105,7 +108,8 @@ def read_tensor_emr(labelfile, tensor_path, emr_path):
             emr = emr_df_.loc[emr_df['Patient ID'] == name1].values[0]
 
             for i in range(len(tensor)):
-                case = {'tensor': tensor[i], 'emr': torch.LongTensor(emr), 'label': label}
+                id = '_'.join([name1, name2, str(i + 1)])
+                case = {'id': id, 'tensor': tensor[i].tolist(), 'emr': torch.LongTensor(emr).tolist(), 'label': label}
                 tensor_emr_list.append(case)
 
     print(len(tensor_emr_list))
@@ -123,8 +127,13 @@ def read_tensor_emr(labelfile, tensor_path, emr_path):
     '''
 
 
-# labelfile = r'D:\BaiduNetdiskDownload\multimodal_breast_cancer\Image_list_new.csv'
-# tensor_path = r'D:\BaiduNetdiskDownload\multimodal_breast_cancer\Features_directory\pt_files'
-# emr_path = r'D:\BaiduNetdiskDownload\multimodal_breast_cancer\EMR.csv'
-# list = read_tensor_emr(labelfile, tensor_path, emr_path)
-# print(list[0])
+labelfile = r'D:\BaiduNetdiskDownload\multimodal_breast_cancer\Image_list_new.csv'
+tensor_path = r'D:\BaiduNetdiskDownload\multimodal_breast_cancer\Features_directory\pt_files'
+emr_path = r'D:\BaiduNetdiskDownload\multimodal_breast_cancer\EMR.csv'
+list = read_tensor_emr(labelfile, tensor_path, emr_path)
+print(list[0])
+
+with open('./classification/data/data.json', 'w') as wf:
+    json.dump(list, wf, indent = 4) #尝试将Tensor对象序列化为JSON时，会遇到错误TypeError: Object of type 'Tensor' is not JSON serializable。这是因为Tensor对象不是JSON序列化数据类型，所以无法直接写入JSON文件。
+    #需要先将tensor转换为list
+    #但是直接转换为list，会丢失精度，所以可以转换为字符串。并且json格式也比.pt格式占据的空间大很多
