@@ -14,7 +14,7 @@ import numpy as np
 import random
 
 def split_dataset(path, train_ratio, valid_ratio, test_ratio):   #分割数据集
-    '''还得重写'''
+    
     data = os.listdir(path)
     assert train_ratio + valid_ratio + test_ratio == 1, 'Ratio error.'   #判断划分是否正确
     

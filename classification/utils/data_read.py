@@ -7,6 +7,7 @@ import re
 from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
 import json
+from tqdm import tqdm
 from emr_process import EMR_FEATURES, only_29dim, one_hot
 
 print(os.getcwd())
@@ -82,6 +83,7 @@ def get_loader(data, batch_size):
 def read_tensor_emr(labelfile, tensor_path, emr_path):
 
     tensor_emr_list = []
+    id_list = []
     df_label = pd.read_csv(labelfile)
     emr_df = pd.read_csv(emr_path)
     # only_29dim(emr_df.loc[:, EMR_FEATURES[1: -1]])
@@ -110,7 +112,9 @@ def read_tensor_emr(labelfile, tensor_path, emr_path):
             for i in range(len(tensor)):
                 id = '_'.join([name1, name2, str(i + 1)])
                 case = {'id': id, 'tensor': tensor[i].tolist(), 'emr': torch.LongTensor(emr).tolist(), 'label': label}
+                # id_case = {'id': id}
                 tensor_emr_list.append(case)
+                # id_list.append(id_case)
 
     print(len(tensor_emr_list))
     # print(tensor_list[0])
@@ -127,13 +131,61 @@ def read_tensor_emr(labelfile, tensor_path, emr_path):
     '''
 
 
-labelfile = r'D:\BaiduNetdiskDownload\multimodal_breast_cancer\Image_list_new.csv'
-tensor_path = r'D:\BaiduNetdiskDownload\multimodal_breast_cancer\Features_directory\pt_files'
-emr_path = r'D:\BaiduNetdiskDownload\multimodal_breast_cancer\EMR.csv'
-list = read_tensor_emr(labelfile, tensor_path, emr_path)
-print(list[0])
+# labelfile = r'D:\BaiduNetdiskDownload\multimodal_breast_cancer\Image_list_new.csv'
+# tensor_path = r'D:\BaiduNetdiskDownload\multimodal_breast_cancer\Features_directory\pt_files'
+# emr_path = r'D:\BaiduNetdiskDownload\multimodal_breast_cancer\EMR.csv'
+# list = read_tensor_emr(labelfile, tensor_path, emr_path)
+# print(list[0])
 
-with open('./classification/data/data.json', 'w') as wf:
-    json.dump(list, wf, indent = 4) #尝试将Tensor对象序列化为JSON时，会遇到错误TypeError: Object of type 'Tensor' is not JSON serializable。这是因为Tensor对象不是JSON序列化数据类型，所以无法直接写入JSON文件。
+# with open('./classification/data/data_id.json', 'w') as wf:
+#     json.dump(list2, wf, indent = 4) 
+    #尝试将Tensor对象序列化为JSON时，会遇到错误TypeError: Object of type 'Tensor' is not JSON serializable。这是因为Tensor对象不是JSON序列化数据类型，所以无法直接写入JSON文件。
     #需要先将tensor转换为list
     #但是直接转换为list，会丢失精度，所以可以转换为字符串。并且json格式也比.pt格式占据的空间大很多
+
+'''
+可以只对id写入json，然后tensor，emr，这些，在载入内存之后，可以根据id去取tensor，emr等数据。
+如果将id以及数据地址写入，在之后的话根据地址去io，会产生大量的io时间，不利于训练。
+'''
+
+with open('./classification/data/data_id.json', 'r') as f:
+    data_id = json.load(f)
+    train_ratio = 0.8
+    valid_ratio = 0.1
+    test_ratio = 0.1
+    train_num = int(len(data_id) * train_ratio)
+    valid_num = int(len(data_id) * valid_ratio)
+    test_num = int(len(data_id) * test_ratio)
+    # assert train_num + valid_num +test_num == len(data_id)
+    
+    
+    random.shuffle(data_id)
+    train_data = []
+    valid_data = []
+    test_data = []
+    for id in data_id:
+        # print(id)
+        if len(train_data) < train_num:
+            train_data.append(id)
+        elif len(valid_data) < valid_num:
+            valid_data.append(id)
+        else:
+            test_data.append(id)
+    
+    print(len(train_data), '\n',len(valid_data), '\n', len(test_data))
+    print('finish')
+
+    with open('./classification/data/train_id.txt', 'w') as f:
+        for id in tqdm(train_data, desc='-----------train data'):
+            f.write(id['id'])
+            f.write('\n')
+    
+    with open('./classification/data/valid_id.txt', 'w') as f:
+        for id in tqdm(valid_data, desc='-----------valid data'):
+            f.write(id['id'])
+            f.write('\n')
+
+    with open('./classification/data/test_id.txt', 'w') as f:
+        for id in tqdm(test_data, desc = '-----------test data'):
+            f.write(id['id'])
+            f.write('\n')
