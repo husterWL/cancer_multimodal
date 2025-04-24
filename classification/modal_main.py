@@ -10,6 +10,7 @@ from utils.common import save_model, loss_draw, acc_draw, other_draw, earlystop_
 from utils.dataprocess import Uni_processor, Processor
 from unitrainer import Trainer
 from early_stopping_pytorch import EarlyStopping
+import json
 
 
 parser = argparse.ArgumentParser()
@@ -45,9 +46,13 @@ def train():
 
     if not config.fuse_model_type == 'only_image':
         data = read_tensor_emr(config.labelfile, config.tensor_path, config.emr_path)
-
-    # data = read_tensor(config.labelfile, config.tensor_path)
-    train_data, val_data, _ = split_dataset(data, config.train_ratio, config.valid_ratio, config.test_ratio)
+        train_data = []
+        val_data = []
+        
+    else:
+        data = read_tensor(config.labelfile, config.tensor_path)
+        train_data, val_data, _ = split_dataset(data, config.train_ratio, config.valid_ratio, config.test_ratio)
+    
     train_loader = processor(train_data, config.train_params)
     val_loader = processor(val_data, config.test_params)
     

@@ -131,11 +131,12 @@ def read_tensor_emr(labelfile, tensor_path, emr_path):
     '''
 
 
-# labelfile = r'D:\BaiduNetdiskDownload\multimodal_breast_cancer\Image_list_new.csv'
-# tensor_path = r'D:\BaiduNetdiskDownload\multimodal_breast_cancer\Features_directory\pt_files'
-# emr_path = r'D:\BaiduNetdiskDownload\multimodal_breast_cancer\EMR.csv'
-# list = read_tensor_emr(labelfile, tensor_path, emr_path)
-# print(list[0])
+labelfile = r'D:\BaiduNetdiskDownload\multimodal_breast_cancer\Image_list_new.csv'
+tensor_path = r'D:\BaiduNetdiskDownload\multimodal_breast_cancer\Features_directory\pt_files'
+emr_path = r'D:\BaiduNetdiskDownload\multimodal_breast_cancer\EMR.csv'
+list = read_tensor_emr(labelfile, tensor_path, emr_path)
+print(list[0])
+print()
 
 # with open('./classification/data/data_id.json', 'w') as wf:
 #     json.dump(list2, wf, indent = 4) 
@@ -147,7 +148,7 @@ def read_tensor_emr(labelfile, tensor_path, emr_path):
 可以只对id写入json，然后tensor，emr，这些，在载入内存之后，可以根据id去取tensor，emr等数据。
 如果将id以及数据地址写入，在之后的话根据地址去io，会产生大量的io时间，不利于训练。
 '''
-
+'''
 with open('./classification/data/data_id.json', 'r') as f:
     data_id = json.load(f)
     train_ratio = 0.8
@@ -189,3 +190,4 @@ with open('./classification/data/data_id.json', 'r') as f:
         for id in tqdm(test_data, desc = '-----------test data'):
             f.write(id['id'])
             f.write('\n')
+'''
