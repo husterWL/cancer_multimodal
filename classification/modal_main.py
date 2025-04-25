@@ -56,11 +56,11 @@ def train():
         with open('./classifiction/data/train_id.txt', 'r') as f:
             for line in f.readlines():
                 line = line.strip('\n')
-                train_data.append(lookup_data.get[line])
+                train_data.append(lookup_data[line])
         with open('./classifiction/data/valid_id.txt', 'r') as f:
             for line in f.readlines():
                 line = line.strip('\n')
-                val_data.append(lookup_data.get[line])
+                val_data.append(lookup_data[line])
 
 
     else:
