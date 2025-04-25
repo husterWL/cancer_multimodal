@@ -48,7 +48,21 @@ def train():
         data = read_tensor_emr(config.labelfile, config.tensor_path, config.emr_path)
         train_data = []
         val_data = []
+        '''
+        这里由于data是字典的列表，所以按照id.txt文件进行划分需要遍历，单纯的遍历会产生大量的IO时间，需要进行优化
+        在这里重新将以字典为元素的列表再映射为一个字典，当然这只适合id唯一的情况
+        '''
+        lookup_data = {dic['id']: dic for dic in data}
+        with open('./classifiction/data/train_id.txt', 'r') as f:
+            for line in f.readlines():
+                line = line.strip('\n')
+                train_data.append(lookup_data[line])
+        with open('./classifiction/data/valid_id.txt', 'r') as f:
+            for line in f.readlines():
+                line = line.strip('\n')
+                val_data.append(lookup_data[line])
         
+
     else:
         data = read_tensor(config.labelfile, config.tensor_path)
         train_data, val_data, _ = split_dataset(data, config.train_ratio, config.valid_ratio, config.test_ratio)
