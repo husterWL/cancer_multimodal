@@ -55,13 +55,10 @@ def train():
         lookup_data = {dic['id']: dic for dic in data}
         with open('./classifiction/data/train_id.txt', 'r') as f:
             for line in f.readlines():
-                line = line.strip('\n')
-                train_data.append(lookup_data[line])
+                train_data.append(lookup_data[line.strip('\n')])
         with open('./classifiction/data/valid_id.txt', 'r') as f:
             for line in f.readlines():
-                line = line.strip('\n')
-                val_data.append(lookup_data[line])
-
+                val_data.append(lookup_data[line.strip('\n')])
 
     else:
         data = read_tensor(config.labelfile, config.tensor_path)

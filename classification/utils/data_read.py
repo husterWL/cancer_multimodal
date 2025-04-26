@@ -111,7 +111,11 @@ def read_tensor_emr(labelfile, tensor_path, emr_path):
 
             for i in range(len(tensor)):
                 id = '_'.join([name1, name2, str(i + 1)])
-                case = {'id': id, 'tensor': tensor[i].tolist(), 'emr': torch.LongTensor(emr).tolist(), 'label': label}
+                case = {'id': id, 'tensor': tensor[i], 'emr': torch.LongTensor(emr), 'label': label}
+                '''
+                # 似乎可以考虑使用元组，这样可以减少内存占用
+                case = (id, tensor[i], torch.LongTensor(emr), label)
+                '''
                 # id_case = {'id': id}
                 tensor_emr_list.append(case)
                 # id_list.append(id_case)

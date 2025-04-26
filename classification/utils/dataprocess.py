@@ -15,7 +15,7 @@ from apidecode import api_decode
 from apimetric import api_metric
 from tqdm import tqdm
 
-class LabelVocabulary:
+class LabelVocabulary:  #类的作用：将标签名(str)映射为整数(value)值
     UNK = 'UNK'
 
     def __init__(self):
@@ -76,7 +76,7 @@ class Uni_processor:
         # print('这是labelvocab的长度', self.labelvocab._length_()) #没问题 为2
         # print('这是labelvocab的value2label', self.labelvocab.label2value) #没问题 {'benign': 0, 'malignant': 1}
         tensors, encoded_labels = [], []
-
+        
         for line in tqdm(data, desc='----- [Encoding]'):
             tensor, label = line['tensor'], line['label']
             tensors.append(tensor)
