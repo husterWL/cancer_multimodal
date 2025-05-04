@@ -9,6 +9,7 @@ from utils.data_read import read_tensor, split_dataset, read_tensor_emr
 from utils.common import save_model, loss_draw, acc_draw, other_draw, earlystop_draw
 from utils.dataprocess import Uni_processor, Processor
 from unitrainer import Trainer
+from trainer import multitrainer
 from early_stopping_pytorch import EarlyStopping
 import json
 
@@ -30,17 +31,20 @@ config.load_model_path = args.load_model_path
 
 config.fuse_model_type = args.fusion_type
 
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
 if config.fuse_model_type == 'only_image':
     processor = Uni_processor(config)
     from model.Unimodal_vision import Univision
     model = Univision(config)
+    trainer = Trainer(config, processor, model, device)
 elif config.fuse_model_type == 'multimodal':
     processor = Processor(config)
     from model.With_EHR import Fusemodel
     model = Fusemodel(config)
 
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-trainer = Trainer(config, processor, model, device)
+
+
 
 def train():
 

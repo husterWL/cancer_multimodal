@@ -55,7 +55,8 @@ class Processor:
         return api_metric(inputs, outputs)
     
     def to_dataset(self, data):
-        dataset_inputs = self.encode(data)
+        dataset_inputs = self.encode(data)  # 返回的是多个值，多个值付给dataset_inputs是可以的，python中是利用元组打包形式进行赋值
+        # 无论是否显式添加括号，逗号分隔的多个值在 Python 中默认被视为元组
         return apidataset(*dataset_inputs)
     
     def to_loader(self, data, parameters):

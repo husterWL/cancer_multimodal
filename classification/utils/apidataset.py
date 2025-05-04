@@ -11,18 +11,18 @@ from torch.utils.data import Dataset
 
 class apidataset(Dataset):
 
-    def __init__(self, guids, EHRs, imgs, labels):
+    def __init__(self, guids, imgs, EHRs, labels):
         super().__init__()
         self.guids = guids
-        self.EHRs = EHRs
         self.imgs = imgs
+        self.EHRs = EHRs
         self.labels = labels
     
     def __len__(self):
         return len(self.guids)  #返回有多少个样本
     
     def __getitem__(self, index):
-        return self.guids[index], self.EHRs[index], self.imgs[index], self.labels[index]
+        return self.guids[index], self.imgs[index], self.EHRs[index], self.labels[index]
     
     '''
     有问题的collate_fn函数
@@ -32,8 +32,15 @@ class apidataset(Dataset):
     '''
 
     def collate_fn(self, batch):  #用于将数据集中的每个样本转换为一个批次，以便在训练和测试过程中使用。
-        guids, EHRs, imgs, labels = map(list, zip(*batch))
-        return guids, torch.tensor(EHRs).long(), torch.tensor(imgs).float(), torch.tensor(labels).long()
+        
+        guids = [b[0] for b in batch]
+        imgs  = [b[1] for b in batch]
+        imgs = torch.stack(imgs, 0)
+        ehrs = [b[2] for b in batch]
+        ehrs = torch.stack(ehrs)
+        labels = torch.LongTensor([b[3] for b in batch])
+
+        return guids, ehrs, imgs, labels
     
 class uniapidataset(Dataset):
 

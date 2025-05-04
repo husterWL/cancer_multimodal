@@ -2,16 +2,11 @@ import torch
 import torch.optim as optim
 from tqdm import tqdm
 
-class Trainer():            #训练器
+class multitrainer():            #训练器
 
     def __init__(self, config, processor, model, device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')):
         self.config = config
         self.processor = processor
-        '''
-        这种情况下，训练器类中的model和主函数main中的model是同一个对象。
-        也就是说，如果你在训练器类中对model进行了修改（例如进行了训练），那么这些修改也会反映到主函数main中的model上。
-        因为它们是同一个对象的引用。
-        '''
         self.model = model.to(device)
         self.device = device
        
