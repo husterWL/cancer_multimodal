@@ -12,7 +12,7 @@ class Trainer():
         # parameters = list(model.named_parameters())
         parameters = [param for name, param in model.named_parameters()]
 
-        self.optimizer = optim.Adam(params = parameters, lr = config.learning_rate)
+        self.optimizer = optim.Adam(params = parameters, lr = config.learning_rate, weight_decay = config.weight_decay)
 
     def train(self, train_loader):
         self.model.train()

@@ -42,7 +42,7 @@ elif config.fuse_model_type == 'multimodal':
     processor = Processor(config)
     from model.With_EHR import Fusemodel
     model = Fusemodel(config)
-
+    trainer = multitrainer(config, processor, model, device)
 
 
 

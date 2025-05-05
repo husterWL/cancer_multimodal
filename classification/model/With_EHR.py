@@ -33,20 +33,17 @@ class Univision(nn.Module):
             return pred_labels, loss
         else:
             return pred_labels  #predic
-class Uniemr(nn.Module):
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-    def forward(self, *args, **kwargs):
-        pass
 
 class Fusemodel(nn.Module):
 
     def __init__(self, *args, **kwargs):
+        
         super().__init__(*args, **kwargs)
-        self.univision = Univision()
-        self.uniemr = Uniemr()
+        
+        self.attention = torch.nn.MultiheadAttention(embed_dim = 512, num_heads = 8)
 
+        self.fuse_attention = torch.nn.MultiheadAttention(embed_dim = 512, num_heads = 8)
+        
     def forward(self, *args, **kwargs):
         pass
