@@ -29,8 +29,12 @@ class config:
     num_labels = 2
 
     #fusion parameters
+    img_dimension = 1024
+    emr_dimension = 106
     fuse_model_type = 'unimodal'
-    fusion_hidden_dimension = 1024
+    fusion_hidden_dimension = 512
+    num_heads = 8
+
 
     # dataloader parameters
     train_params = {'batch_size': 16, 'shuffle': True, 'num_workers': 2}
