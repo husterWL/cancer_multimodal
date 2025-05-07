@@ -34,7 +34,7 @@ class config:
     fuse_model_type = 'unimodal'
     fusion_hidden_dimension = 512
     num_heads = 8
-
+    fuse_dropout = 0.2
 
     # dataloader parameters
     train_params = {'batch_size': 16, 'shuffle': True, 'num_workers': 2}

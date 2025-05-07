@@ -71,10 +71,11 @@ class Fusemodel(nn.Module):
         self.modality_proj_emr = nn.Linear(config.emr_dimension, config.fusion_hidden_dimension)    #后续可以尝试加入高斯噪声
 
         self.clasiffier = nn.Sequential(
-            nn.Linear(config.fusion_hidden_dimension, config.fusion_hidden_dimension),
-
-
-            
+            nn.Dropout(config.fuse_dropout),
+            nn.Linear(config.middle_hidden_dimension, config.output_hidden_dimension),
+            nn.ReLU(inplace = True),
+            nn.Dropout(config.fuse_dropout),
+            nn.Linear(config.output_hidden_dimension, config.num_labels),
         )
 
         self.loss_fuc = nn.CrossEntropyLoss()
