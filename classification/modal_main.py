@@ -11,7 +11,7 @@ from utils.dataprocess import Uni_processor, Processor
 from unitrainer import Trainer
 from trainer import multitrainer
 from early_stopping_pytorch import EarlyStopping
-import json
+
 
 
 parser = argparse.ArgumentParser()
@@ -21,7 +21,8 @@ parser.add_argument('--weight_decay', default = 1e-4, help = '设置权重衰减
 parser.add_argument('--epoch', default = 10, help = '设置训练轮数', type = int)
 parser.add_argument('--do_test', action = 'store_true', help = '预测测试集数据')
 parser.add_argument('--load_model_path', default = None, help = '已经训练好的模型路径', type = str)
-parser.add_argument('--fusion_type', default = 'only_image', action = 'store_true', help = '多模态融合方式', type = str)
+parser.add_argument('--model_type', default = 'only_image', action = 'store_true', help = '是否多模态融合', type = str)
+parser.add_argument('--fusion_type', default = 'concatenate', action = 'store_true', help = '多模态融合方式', type = str)
 
 args = parser.parse_args()
 config.learning_rate = args.lr
@@ -29,19 +30,23 @@ config.weight_decay = args.weight_decay
 config.epoch = args.epoch
 config.load_model_path = args.load_model_path
 
-config.fuse_model_type = args.fusion_type
+config.model_type = args.model_type
+config.fusion_type = args.fusion_type
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-if config.fuse_model_type == 'only_image':
+if config.model_type == 'only_image':
     processor = Uni_processor(config)
     from model.Unimodal_vision import Univision
     model = Univision(config)
     trainer = Trainer(config, processor, model, device)
-elif config.fuse_model_type == 'multimodal':
+elif config.model_type == 'multimodal':
     processor = Processor(config)
-    from model.With_EHR import Fusemodel
-    model = Fusemodel(config)
+    if config.fusion_type == 'concatenate':
+        from model.With_EHR import Concatmodel as FuseModel
+    if config.fusion_type == 'Bicrossmodel':
+        from model.With_EHR import Bicrossmodel as FuseModel
+    model = FuseModel(config)
     trainer = multitrainer(config, processor, model, device)
 
 

@@ -3,7 +3,6 @@
 '''
 import torch
 import torch.nn as nn
-from Config import config
 import torchvision.models as models
 
 # FCN = models.segmentation.fcn_resnet50(pretrained = True)

@@ -1,19 +1,22 @@
-import torch
-import torch.nn as nn
-from Config import config
-import torchvision.models as models
-
 '''
 加入电子病历数据，提高模型性能
 '''
+import torch
+import torch.nn as nn
+import torchvision.models as models
 
-class Fusemodel(nn.Module):
 
-    def __init__(self, *args, **kwargs):
+
+class Bicrossmodel(nn.Module):
+
+    '''
+    双向交叉注意力模型
+    '''
+
+    def __init__(self, config):
         
-        super().__init__(*args, **kwargs)
+        super(Bicrossmodel, self).__init__()
         
-
         '''
         两个模态的特征首先需要对齐才能使用attention进行融合
         若使用concatenate的话，直接拼接即可，不需要对齐
@@ -81,7 +84,7 @@ class Fusemodel(nn.Module):
         self.loss_fuc = nn.CrossEntropyLoss()
         
     def forward(self, tensors, emrs, labels = None):
-        pass
+        
         aligned_img = self.modality_proj_img(tensors)
         aligned_emr = self.modality_proj_emr(emrs)
 
@@ -98,3 +101,23 @@ class Fusemodel(nn.Module):
             return pred_labels, loss
         else:
             return pred_labels
+        
+class ConcatModel(nn.Module):
+    
+    def __init__(self, config):
+
+        super(ConcatModel, self).__init__()
+
+        self.classifier = nn.Sequential(
+            nn.Dropout(config.first_dropout),
+            nn.Linear(config.middle_hidden_dimension, config.output_hidden_dimension),
+            nn.ReLU(inplace = True),
+            nn.Dropout(config.last_dropout),
+            nn.Linear(config.output_hidden_dimension, config.num_labels),
+            # nn.Softmax()
+        )
+        self.loss_func = nn.CrossEntropyLoss()
+    
+    def forward(self, tensors, emrs, labels = None):
+
+        pass

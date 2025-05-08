@@ -31,7 +31,8 @@ class config:
     #fusion parameters
     img_dimension = 1024
     emr_dimension = 106
-    fuse_model_type = 'unimodal'
+    model_type = 'multimodal'
+    fusion_type = 'concatenate'
     fusion_hidden_dimension = 512
     num_heads = 8
     fuse_dropout = 0.2
