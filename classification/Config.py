@@ -6,7 +6,8 @@ class config:
     tensor_path = r'D:\BaiduNetdiskDownload\multimodal_breast_cancer\Features_directory\pt_files'
     labelfile = r'D:\BaiduNetdiskDownload\multimodal_breast_cancer\Image_list_new.csv'
     emr_path = r'D:\BaiduNetdiskDownload\multimodal_breast_cancer\EMR.csv'
-    load_model_path = r'D:\BaiduNetdiskDownload\multimodal_breast_cancer\_model\unimodal\pytorch_model.bin'
+    # load_model_path = r'D:\BaiduNetdiskDownload\multimodal_breast_cancer\_model\unimodal\pytorch_model.bin'
+    load_model_path = r'D:\BaiduNetdiskDownload\multimodal_breast_cancer\_model\multimodal\pytorch_model.bin'
     output_path = r'D:\BaiduNetdiskDownload\multimodal_breast_cancer\_model'
     all_data_path = r'./data/data.json'
 
@@ -32,10 +33,11 @@ class config:
     img_dimension = 1024
     emr_dimension = 106
     model_type = 'multimodal'
-    fusion_type = 'concatenate'
+    fusion_type = 'Bicrossmodel'
     fusion_hidden_dimension = 512
     num_heads = 8
     fuse_dropout = 0.2
+    attention_dropout = 0.3
 
     # dataloader parameters
     train_params = {'batch_size': 16, 'shuffle': True, 'num_workers': 2}
@@ -43,7 +45,7 @@ class config:
     test_params =  {'batch_size': 8, 'shuffle': False, 'num_workers': 2}
     
     #EMR
-    EMR_FEATURES = [ 'Patient ID', 
+    EMR_FEATURES = ['Patient ID', 
                  'Age', 'Gender', 'Disease Course Type', 'Personal Tumor History', 'Family Tumor History',
                  'Prophase Treatment', 'Neoadjuvant Chemotherapy', 'Dimple Sign', 'Orange Peel Appearance',
                  'Redness And Swelling Of Skin', 'Skin Ulcers', 'Tumor', 'Breast Deformation', 'Nipple Change',

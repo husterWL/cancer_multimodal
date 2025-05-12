@@ -63,7 +63,8 @@ class Bicrossmodel(nn.Module):
         self.fuse_attention = nn.MultiheadAttention(
             embed_dim = config.fusion_hidden_dimension, 
             num_heads = config.num_heads,
-            batch_first = True
+            batch_first = True,
+            dropout = config.attention_dropout
             )
 
         self.trans_attention = nn.TransformerEncoderLayer(
@@ -102,7 +103,7 @@ class Bicrossmodel(nn.Module):
         else:
             return pred_labels
         
-class ConcatModel(nn.Module):
+class Concatmodel(nn.Module):
     
     def __init__(self, config):
 

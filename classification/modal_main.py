@@ -22,7 +22,7 @@ parser.add_argument('--epoch', default = 10, help = '设置训练轮数', type =
 parser.add_argument('--do_test', action = 'store_true', help = '预测测试集数据')
 parser.add_argument('--load_model_path', default = None, help = '已经训练好的模型路径', type = str)
 parser.add_argument('--model_type', default = 'only_image', action = 'store_true', help = '是否多模态融合', type = str)
-parser.add_argument('--fusion_type', default = 'concatenate', action = 'store_true', help = '多模态融合方式', type = str)
+parser.add_argument('--fusion_type', default = 'Concatenate', action = 'store_true', help = '多模态融合方式', type = str)
 
 args = parser.parse_args()
 config.learning_rate = args.lr
@@ -30,8 +30,8 @@ config.weight_decay = args.weight_decay
 config.epoch = args.epoch
 config.load_model_path = args.load_model_path
 
-config.model_type = args.model_type
-config.fusion_type = args.fusion_type
+# config.model_type = args.model_type
+# config.fusion_type = args.fusion_type
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -42,7 +42,7 @@ if config.model_type == 'only_image':
     trainer = Trainer(config, processor, model, device)
 elif config.model_type == 'multimodal':
     processor = Processor(config)
-    if config.fusion_type == 'concatenate':
+    if config.fusion_type == 'Concatenate':
         from model.With_EHR import Concatmodel as FuseModel
     if config.fusion_type == 'Bicrossmodel':
         from model.With_EHR import Bicrossmodel as FuseModel
@@ -53,7 +53,7 @@ elif config.model_type == 'multimodal':
 
 def train():
 
-    if not config.fuse_model_type == 'only_image':
+    if not config.model_type == 'only_image':
         data = read_tensor_emr(config.labelfile, config.tensor_path, config.emr_path)
         train_data = []
         val_data = []
@@ -87,7 +87,7 @@ def train():
     Range = range(0, epoch)
     print('这是range的类型', type(Range))
 
-    early_stop = EarlyStopping(patience = config.patience, verbose = True, path = config.output_path + '\\checkpoint2.pt')
+    early_stop = EarlyStopping(patience = config.patience, verbose = True, path = config.output_path + '\\checkpoint3.pt')
     
     for e in range(epoch):
         print('-' * 20 + ' ' + 'Epoch ' + str(e+1) + ' ' + '-' * 20)
@@ -110,7 +110,7 @@ def train():
         '''
         if vacc > best_acc:
             best_acc = vacc
-            save_model(config.output_path, config.fuse_model_type, model)   #保存训练好的模型
+            save_model(config.output_path, config.model_type, model)   #保存训练好的模型
             print('Update best model!')
         print()
 
@@ -135,25 +135,6 @@ def train():
         #early_stop图
     earlystop_draw(tloss_list, vloss_list, os.path.join(config.output_path, 'early_stop.jpg'))
 
-
-    '''
-    早停
-    from early_stopping_pytorch import EarlyStopping
-
-    # Initialize early stopping object
-    early_stopping = EarlyStopping(patience=7, verbose=True)
-
-    # In your training loop:
-    for epoch in range(num_epochs):
-        # ... training code ...
-        val_loss = ... # calculate validation loss
-
-        # Early stopping call
-        early_stopping(val_loss, model)
-        if early_stopping.early_stop:
-            print("Early stopping triggered")
-            break
-    '''
 
 def test():
     data = read_tensor(config.labelfile, config.tensor_path)
