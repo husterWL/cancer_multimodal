@@ -19,7 +19,7 @@ class Trainer():
         loss_list = []
         true_labels, pred_labels = [], []
 
-        for batch in tqdm(train_loader, desc = '-----------【Traing】'):
+        for batch in tqdm(train_loader, desc = '-----------[Traing]'):
             # print(type(batch))
             tensors, labels = batch
             # print(type(tensors), type(labels))

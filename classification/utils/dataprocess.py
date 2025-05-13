@@ -19,7 +19,7 @@ class LabelVocabulary:  #类的作用：将标签名(str)映射为整数(value)�
     UNK = 'UNK'
 
     def __init__(self):
-        self.label2value = {}   #benigh, malignant
+        self.label2value = {}   #benign, malignant
         self.value2label = {}
 
     def _length_(self):
@@ -69,15 +69,16 @@ class Uni_processor:
         self.labelvocab = LabelVocabulary()
     
     def __call__(self, data, parameters):
-        return self.to_loader(data, parameters) #返回的是一个DataLoader对象，data的格式为：[{'tensor': tensor, 'label': label}, ...]
+        return self.to_loader(data, parameters) 
+        #返回的是一个DataLoader对象，data的格式为：[{'tensor': tensor, 'label': label}, ...]
 
     def encode(self, data):
         self.labelvocab.add_label('benign')
         self.labelvocab.add_label('malignant')
         # print('这是labelvocab的长度', self.labelvocab._length_()) #没问题 为2
         # print('这是labelvocab的value2label', self.labelvocab.label2value) #没问题 {'benign': 0, 'malignant': 1}
-        tensors, encoded_labels = [], []
         
+        tensors, encoded_labels = [], []
         for line in tqdm(data, desc='----- [Encoding]'):
             tensor, label = line['tensor'], line['label']
             tensors.append(tensor)

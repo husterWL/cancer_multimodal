@@ -21,10 +21,11 @@ class multitrainer():            #训练器
         loss_list = []
         true_labels, pred_labels = [], []
 
-        #如果collate_fn函数没用，则在这里转化为批次
         for batch in tqdm(train_loader, desc='----- [Training] '):
             guids, imgs, ehrs, labels = batch
-            imgs, ehrs, labels = imgs.to(self.device), ehrs.to(self.device), labels.to(self.device)    
+
+            imgs, ehrs, labels = imgs.to(self.device), ehrs.to(self.device), labels.to(self.device)
+
             pred, loss = self.model(imgs, ehrs, labels = labels) 
             
             # metric

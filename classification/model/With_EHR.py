@@ -67,9 +67,9 @@ class Bicrossmodel(nn.Module):
             dropout = config.attention_dropout
             )
 
-        self.trans_attention = nn.TransformerEncoderLayer(
-            d_model = config.fusion_hidden_dimension,
-        )
+        # self.trans_attention = nn.TransformerEncoderLayer(
+        #     d_model = config.fusion_hidden_dimension,
+        # )
 
         self.modality_proj_img = nn.Linear(config.img_dimension, config.fusion_hidden_dimension)
         self.modality_proj_emr = nn.Linear(config.emr_dimension, config.fusion_hidden_dimension)    #后续可以尝试加入高斯噪声
@@ -86,6 +86,11 @@ class Bicrossmodel(nn.Module):
         
     def forward(self, tensors, emrs, labels = None):
         
+        # print('weight_dtype', self.modality_proj_img.weight.dtype, '\n')
+        # print('weight_dtype', self.modality_proj_emr.weight.dtype, '\n')
+        # print(tensors.dtype, emrs.dtype)
+
+
         aligned_img = self.modality_proj_img(tensors)
         aligned_emr = self.modality_proj_emr(emrs)
 

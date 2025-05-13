@@ -1,10 +1,10 @@
 import os
 import sys
 sys.path.append('./utils')
+# print(os.getcwd())
 import torch
 import argparse
 from Config import config
-import matplotlib.pyplot as plt
 from utils.data_read import read_tensor, split_dataset, read_tensor_emr
 from utils.common import save_model, loss_draw, acc_draw, other_draw, earlystop_draw
 from utils.dataprocess import Uni_processor, Processor
@@ -21,8 +21,8 @@ parser.add_argument('--weight_decay', default = 1e-4, help = '设置权重衰减
 parser.add_argument('--epoch', default = 10, help = '设置训练轮数', type = int)
 parser.add_argument('--do_test', action = 'store_true', help = '预测测试集数据')
 parser.add_argument('--load_model_path', default = None, help = '已经训练好的模型路径', type = str)
-parser.add_argument('--model_type', default = 'only_image', action = 'store_true', help = '是否多模态融合', type = str)
-parser.add_argument('--fusion_type', default = 'Concatenate', action = 'store_true', help = '多模态融合方式', type = str)
+parser.add_argument('--model_type', default = 'only_image', action = 'store', help = '是否多模态融合', type = str)
+parser.add_argument('--fusion_type', default = 'Concatenate', action = 'store', help = '多模态融合方式', type = str)
 
 args = parser.parse_args()
 config.learning_rate = args.lr
@@ -62,10 +62,10 @@ def train():
         在这里重新将以字典为元素的列表再映射为一个字典，当然这只适合id唯一的情况
         '''
         lookup_data = {dic['id']: dic for dic in data}
-        with open('./classifiction/data/train_id.txt', 'r') as f:
+        with open('./data/train_id.txt', 'r') as f:
             for line in f.readlines():
                 train_data.append(lookup_data[line.strip('\n')])
-        with open('./classifiction/data/valid_id.txt', 'r') as f:
+        with open('./data/valid_id.txt', 'r') as f:
             for line in f.readlines():
                 val_data.append(lookup_data[line.strip('\n')])
 

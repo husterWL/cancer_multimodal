@@ -1,7 +1,6 @@
 import os
 import random
 import torch
-import numpy as np
 import pandas as pd
 import re
 from torch.utils.data import Dataset
@@ -10,7 +9,7 @@ import json
 from tqdm import tqdm
 from emr_process import EMR_FEATURES, only_29dim, one_hot
 
-print(os.getcwd())
+# print(os.getcwd())
 
 '''
 1、特征向量的读取
@@ -111,7 +110,7 @@ def read_tensor_emr(labelfile, tensor_path, emr_path):
 
             for i in range(len(tensor)):
                 id = '_'.join([name1, name2, str(i + 1)])
-                case = {'id': id, 'tensor': tensor[i], 'emr': torch.LongTensor(emr), 'label': label}
+                case = {'id': id, 'tensor': tensor[i], 'emr': torch.FloatTensor(emr), 'label': label}
                 '''
                 # 似乎可以考虑使用元组，这样可以减少内存占用
                 case = (id, tensor[i], torch.LongTensor(emr), label)
@@ -122,7 +121,7 @@ def read_tensor_emr(labelfile, tensor_path, emr_path):
 
     print(len(tensor_emr_list))
     # print(tensor_list[0])
-    print("benign:", benign_num, "malignant:", malignant_num)   #benign: 0 malignant: 3693
+    print("benign:", benign_num, "malignant:", malignant_num)
     print("读取完成")
 
     return tensor_emr_list
@@ -135,12 +134,12 @@ def read_tensor_emr(labelfile, tensor_path, emr_path):
     '''
 
 
-labelfile = r'D:\BaiduNetdiskDownload\multimodal_breast_cancer\Image_list_new.csv'
-tensor_path = r'D:\BaiduNetdiskDownload\multimodal_breast_cancer\Features_directory\pt_files'
-emr_path = r'D:\BaiduNetdiskDownload\multimodal_breast_cancer\EMR.csv'
-list = read_tensor_emr(labelfile, tensor_path, emr_path)
-print(list[0])
-print()
+# labelfile = r'D:\BaiduNetdiskDownload\multimodal_breast_cancer\Image_list_new.csv'
+# tensor_path = r'D:\BaiduNetdiskDownload\multimodal_breast_cancer\Features_directory\pt_files'
+# emr_path = r'D:\BaiduNetdiskDownload\multimodal_breast_cancer\EMR.csv'
+# list = read_tensor_emr(labelfile, tensor_path, emr_path)
+# print(list[0]['tensor'].dtype)
+# print()
 
 # with open('./classification/data/data_id.json', 'w') as wf:
 #     json.dump(list2, wf, indent = 4) 

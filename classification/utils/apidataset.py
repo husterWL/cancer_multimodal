@@ -15,14 +15,14 @@ class apidataset(Dataset):
         super().__init__()
         self.guids = guids
         self.imgs = imgs
-        self.EHRs = EHRs
+        self.ehrs = EHRs
         self.labels = labels
     
     def __len__(self):
         return len(self.guids)  #返回有多少个样本
     
     def __getitem__(self, index):
-        return self.guids[index], self.imgs[index], self.EHRs[index], self.labels[index]
+        return self.guids[index], self.imgs[index], self.ehrs[index], self.labels[index]
     
     '''
     有问题的collate_fn函数
@@ -34,13 +34,14 @@ class apidataset(Dataset):
     def collate_fn(self, batch):  #用于将数据集中的每个样本转换为一个批次，以便在训练和测试过程中使用。
         
         guids = [b[0] for b in batch]
-        imgs  = [b[1] for b in batch]
-        imgs = torch.stack(imgs, 0)
+        imgs = [b[1] for b in batch]
+        imgs = torch.stack(imgs)
         ehrs = [b[2] for b in batch]
         ehrs = torch.stack(ehrs)
         labels = torch.LongTensor([b[3] for b in batch])
 
-        return guids, ehrs, imgs, labels
+
+        return guids, imgs, ehrs, labels
     
 class uniapidataset(Dataset):
 
@@ -56,21 +57,6 @@ class uniapidataset(Dataset):
         return self.tensors[index], self.labels[index]
     
     def collate_fn(self, batch):
-        # tensors, labels = map(list, zip(*batch))
-        # return torch.tensor(tensors).float(), torch.tensor(labels).long()
-        # print((b[0] for b in batch))
-        # tensors = (b[0] for b in batch)
-        # labels = torch.LongTensor(b[1] for b in batch)
-
-        # def collate_fn(self, batch):
-        #     tensors = [b[0] for b in batch]
-        #     labels = torch.LongTensor([b[1] for b in batch])
-        #     return tensors, labels
-
-
-        # for b in batch:
-        #     tensors = [b[0]]
-        #     labels = torch.LongTensor([b[1]])
         
         tensors = [b[0] for b in batch]
         tensors = torch.stack(tensors)
