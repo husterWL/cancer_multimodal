@@ -23,9 +23,7 @@ class multitrainer():            #训练器
 
         for batch in tqdm(train_loader, desc='----- [Training] '):
             guids, imgs, ehrs, labels = batch
-
             imgs, ehrs, labels = imgs.to(self.device), ehrs.to(self.device), labels.to(self.device)
-
             pred, loss = self.model(imgs, ehrs, labels = labels) 
             
             # metric

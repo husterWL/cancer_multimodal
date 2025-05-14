@@ -20,7 +20,7 @@ class config:
     train_ratio = 0.8
     valid_ratio = 0.1
     test_ratio = 0.1
-    patience = 3
+    patience = 10
 
     #model parameters
     first_dropout = 0.4
@@ -35,7 +35,7 @@ class config:
     model_type = 'multimodal'
     fusion_type = 'Bicrossmodel'
     fusion_hidden_dimension = 512
-    num_heads = 8
+    num_heads = 4
     fuse_dropout = 0.2
     attention_dropout = 0.3
 

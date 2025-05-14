@@ -71,7 +71,17 @@ def train():
 
     else:
         data = read_tensor(config.labelfile, config.tensor_path)
-        train_data, val_data, _ = split_dataset(data, config.train_ratio, config.valid_ratio, config.test_ratio)
+        # train_data, val_data, _ = split_dataset(data, config.train_ratio, config.valid_ratio, config.test_ratio)
+        train_data = []
+        val_data = []
+        lookup_data = {dic['id']: dic for dic in data}
+        with open('./data/train_id.txt', 'r') as f:
+            for line in f.readlines():
+                train_data.append(lookup_data[line.strip('\n')])
+        with open('./data/valid_id.txt', 'r') as f:
+            for line in f.readlines():
+                val_data.append(lookup_data[line.strip('\n')])
+
     
     train_loader = processor(train_data, config.train_params)
     val_loader = processor(val_data, config.test_params)
@@ -87,7 +97,7 @@ def train():
     Range = range(0, epoch)
     print('这是range的类型', type(Range))
 
-    early_stop = EarlyStopping(patience = config.patience, verbose = True, path = config.output_path + '\\checkpoint3.pt')
+    early_stop = EarlyStopping(patience = config.patience, verbose = True, path = config.output_path + '\\checkpoint.pt')
     
     for e in range(epoch):
         print('-' * 20 + ' ' + 'Epoch ' + str(e+1) + ' ' + '-' * 20)
@@ -110,7 +120,7 @@ def train():
         '''
         if vacc > best_acc:
             best_acc = vacc
-            save_model(config.output_path, config.model_type, model)   #保存训练好的模型
+            save_model(config.output_path, config.model_type, model)
             print('Update best model!')
         print()
 
@@ -122,17 +132,13 @@ def train():
             print(last_epoch)
             break
 
-        #损失曲线
-
-    loss_draw(tloss_list, vloss_list, (0, last_epoch), os.path.join(config.output_path, 'loss_curve.jpg'))
-
-        #准确率曲线
-    acc_draw(acc_list, (0, last_epoch), os.path.join(config.output_path, 'accuracy_curve.jpg'))
-
-        #macro曲线
-    other_draw(precision, recall, f1, (0, last_epoch), os.path.join(config.output_path, 'other_curve.jpg'))
-
-        #early_stop图
+    #损失曲线
+    loss_draw(tloss_list, vloss_list, range(0, last_epoch), os.path.join(config.output_path, 'loss_curve.jpg'))
+    #准确率曲线
+    acc_draw(acc_list, range(0, last_epoch), os.path.join(config.output_path, 'accuracy_curve.jpg'))
+    #macro曲线
+    other_draw(precision, recall, f1, range(0, last_epoch), os.path.join(config.output_path, 'other_curve.jpg'))
+    #early_stop图
     earlystop_draw(tloss_list, vloss_list, os.path.join(config.output_path, 'early_stop.jpg'))
 
 

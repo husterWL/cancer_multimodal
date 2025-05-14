@@ -52,7 +52,7 @@ def save_model(output_path, model_type, model):
     output_model_dir = os.path.join(output_path, model_type)    #输出模型的保存目录
     if not os.path.exists(output_model_dir): os.makedirs(output_model_dir)
     model_to_save = model.module if hasattr(model, 'module') else model     # Only save the model it-self
-    output_model_file = os.path.join(output_model_dir, "pytorch_model_0512.bin")
+    output_model_file = os.path.join(output_model_dir, "pytorch_model_multimodal_0514.bin")
     torch.save(model_to_save.state_dict(), output_model_file)
 
 def load_model(model, filename):
@@ -127,5 +127,5 @@ def earlystop_draw(tloss_list, vloss_list, dirc):
     plt.legend()
     plt.tight_layout()
     plt.show()
-    fig.savefig('loss_plot.png', bbox_inches='tight')
-    plt.savefig(dirc)
+    fig.savefig(dirc, bbox_inches='tight')
+    # plt.savefig(dirc, bbox_inches = 'tight')

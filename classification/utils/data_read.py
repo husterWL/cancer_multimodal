@@ -34,7 +34,8 @@ def read_tensor(labelfile, tensor_path):
     for root, dirs, files in os.walk(tensor_path):
         for file in files:
             name = re.match(r'^[^\.]+', file).group(0)
-            # print(name)     #python unimodal_main.py --do_train
+            name1 = name.split('_')[1]
+            name2 = name.split('_')[2]
             if df_label.loc[df_label['slide_id'] == name, 'label'].values == 'normal_tissue':   #逻辑错误
                 '''这一行的逻辑是错误的，因为 name in df_label.loc[df_label['slide_id'] == name, 'label'].values 
                 这个表达式的结果是一个布尔值（True 或 False）'''
@@ -46,7 +47,8 @@ def read_tensor(labelfile, tensor_path):
             tensor = torch.load(os.path.join(root, file))
             # print(len(tensor))  # 输出：torch.Size([patchs_num, 1024])
             for i in range(len(tensor)):
-                case = {'tensor': tensor[i], 'label': label}
+                id = '_'.join([name1, name2, str(i + 1)])
+                case = {'id': id, 'tensor': tensor[i], 'label': label}
                 tensor_list.append(case)
 
     print(len(tensor_list))
@@ -115,9 +117,8 @@ def read_tensor_emr(labelfile, tensor_path, emr_path):
                 # 似乎可以考虑使用元组，这样可以减少内存占用
                 case = (id, tensor[i], torch.LongTensor(emr), label)
                 '''
-                # id_case = {'id': id}
                 tensor_emr_list.append(case)
-                # id_list.append(id_case)
+
 
     print(len(tensor_emr_list))
     # print(tensor_list[0])
