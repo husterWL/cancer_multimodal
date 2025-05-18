@@ -152,12 +152,12 @@ def read_tensor_emr(labelfile, tensor_path, emr_path):
 可以只对id写入json，然后tensor，emr，这些，在载入内存之后，可以根据id去取tensor，emr等数据。
 如果将id以及数据地址写入，在之后的话根据地址去io，会产生大量的io时间，不利于训练。
 '''
-'''
+
 with open('./classification/data/data_id.json', 'r') as f:
     data_id = json.load(f)
-    train_ratio = 0.8
+    train_ratio = 0.7
     valid_ratio = 0.1
-    test_ratio = 0.1
+    test_ratio = 0.2
     train_num = int(len(data_id) * train_ratio)
     valid_num = int(len(data_id) * valid_ratio)
     test_num = int(len(data_id) * test_ratio)
@@ -180,18 +180,24 @@ with open('./classification/data/data_id.json', 'r') as f:
     print(len(train_data), '\n',len(valid_data), '\n', len(test_data))
     print('finish')
 
-    with open('./classification/data/train_id.txt', 'w') as f:
+    with open('./classification/data/train_id_1.txt', 'w') as f:
         for id in tqdm(train_data, desc='-----------train data'):
             f.write(id['id'])
             f.write('\n')
     
-    with open('./classification/data/valid_id.txt', 'w') as f:
+    with open('./classification/data/valid_id_1.txt', 'w') as f:
         for id in tqdm(valid_data, desc='-----------valid data'):
             f.write(id['id'])
             f.write('\n')
 
-    with open('./classification/data/test_id.txt', 'w') as f:
+    with open('./classification/data/test_id_1.txt', 'w') as f:
         for id in tqdm(test_data, desc = '-----------test data'):
             f.write(id['id'])
             f.write('\n')
+
+
+
+'''
+后期还可以重新划分一下，按照患者来划分
+
 '''

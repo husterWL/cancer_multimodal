@@ -112,7 +112,7 @@ class Concatmodel(nn.Module):
     
     def __init__(self, config):
 
-        super(ConcatModel, self).__init__()
+        super(Concatmodel, self).__init__()
 
         self.classifier = nn.Sequential(
             nn.Dropout(config.first_dropout),
