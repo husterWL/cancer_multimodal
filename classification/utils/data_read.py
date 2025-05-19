@@ -153,6 +153,7 @@ def read_tensor_emr(labelfile, tensor_path, emr_path):
 如果将id以及数据地址写入，在之后的话根据地址去io，会产生大量的io时间，不利于训练。
 '''
 
+'''
 with open('./classification/data/data_id.json', 'r') as f:
     data_id = json.load(f)
     train_ratio = 0.7
@@ -194,7 +195,7 @@ with open('./classification/data/data_id.json', 'r') as f:
         for id in tqdm(test_data, desc = '-----------test data'):
             f.write(id['id'])
             f.write('\n')
-
+'''
 
 
 '''

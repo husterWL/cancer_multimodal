@@ -28,7 +28,7 @@ args = parser.parse_args()
 config.learning_rate = args.lr
 config.weight_decay = args.weight_decay
 config.epoch = args.epoch
-config.load_model_path = args.load_model_path
+# config.load_model_path = args.load_model_path
 
 # config.model_type = args.model_type
 # config.fusion_type = args.fusion_type
@@ -55,36 +55,32 @@ def train():
 
     if not config.model_type == 'only_image':
         data = read_tensor_emr(config.labelfile, config.tensor_path, config.emr_path)
-        train_data = []
-        val_data = []
-        '''
-        这里由于data是字典的列表，所以按照id.txt文件进行划分需要遍历，单纯的遍历会产生大量的IO时间，需要进行优化
-        在这里重新将以字典为元素的列表再映射为一个字典，当然这只适合id唯一的情况
-        '''
-        lookup_data = {dic['id']: dic for dic in data}
-        with open('./data/train_id.txt', 'r') as f:
-            for line in f.readlines():
-                train_data.append(lookup_data[line.strip('\n')])
-        with open('./data/valid_id.txt', 'r') as f:
-            for line in f.readlines():
-                val_data.append(lookup_data[line.strip('\n')])
-
+    
     else:
         data = read_tensor(config.labelfile, config.tensor_path)
+        
+    train_data = []
+    val_data = []
+    '''
+    这里由于data是字典的列表，所以按照id.txt文件进行划分需要遍历，单纯的遍历会产生大量的IO时间，需要进行优化
+    在这里重新将以字典为元素的列表再映射为一个字典，当然这只适合id唯一的情况
+    '''
+    lookup_data = {dic['id']: dic for dic in data}
+    with open('./data/train_id.txt', 'r') as f:
+        for line in f.readlines():
+            train_data.append(lookup_data[line.strip('\n')])
+    with open('./data/valid_id.txt', 'r') as f:
+        for line in f.readlines():
+            val_data.append(lookup_data[line.strip('\n')])
+
+    # else:
+    #     data = read_tensor(config.labelfile, config.tensor_path)
         # train_data, val_data, _ = split_dataset(data, config.train_ratio, config.valid_ratio, config.test_ratio)
-        train_data = []
-        val_data = []
-        lookup_data = {dic['id']: dic for dic in data}
-        with open('./data/train_id.txt', 'r') as f:
-            for line in f.readlines():
-                train_data.append(lookup_data[line.strip('\n')])
-        with open('./data/valid_id.txt', 'r') as f:
-            for line in f.readlines():
-                val_data.append(lookup_data[line.strip('\n')])
+    
 
     
     train_loader = processor(train_data, config.train_params)
-    val_loader = processor(val_data, config.test_params)
+    valid_loader = processor(val_data, config.test_params)
     
     #不需要processor
     best_acc = 0.0
@@ -103,7 +99,7 @@ def train():
         print('-' * 20 + ' ' + 'Epoch ' + str(e+1) + ' ' + '-' * 20)
         tloss, tlosslist = trainer.train(train_loader) #参数是一个Dataloader实例对象，用train函数进行训练，返回训练损失和损失列表
         print('Train Loss: {}'.format(tloss))
-        vloss, vacc, report_dict = trainer.valid(val_loader) #valid()函数用于评估模型，并返回验证损失和验证准确率
+        vloss, vacc, report_dict = trainer.valid(valid_loader) #valid()函数用于评估模型，并返回验证损失和验证准确率
         print('Valid Loss: {}'.format(vloss))
         print('Valid Acc: {}'.format(vacc))
 
@@ -143,8 +139,17 @@ def train():
 
 
 def test():
-    data = read_tensor(config.labelfile, config.tensor_path)
-    _, _, test_data = split_dataset(data, config.train_ratio, config.valid_ratio, config.test_ratio)
+
+    if not config.model_type == 'only_image':
+        data = read_tensor_emr(config.labelfile, config.tensor_path, config.emr_path)
+    
+    else:
+        data = read_tensor(config.labelfile, config.tensor_path)
+    test_data = []
+    lookup_data = {dic['id']: dic for dic in data}
+    with open('./data/test_id.txt', 'r') as f:
+        for line in f.readlines():
+            test_data.append(lookup_data[line.strip('\n')])
 
     test_loader = processor(test_data, config.test_params)
 
@@ -155,13 +160,14 @@ def test():
         '''
         #trainer.model.load_state_dict(torch.load(config.load_model_path))
     
-    tloss, tacc, report_dict = trainer.predict(test_loader)
-    print('Test Loss: {}'.format(tloss))
+    tacc, report_dict = trainer.predict(test_loader)
     print('Test Acc: {}'.format(tacc))
     print('accuracy:{}'.format(report_dict['accuracy']), '\n', 
           'precision:{}'.format(report_dict['weighted avg']['precision']), '\n',
           'recall:{}'.format(report_dict['weighted avg']['recall']), '\n', 
           'f1-score:{}'.format(report_dict['weighted avg']['f1-score']))
+    
+
 
 if __name__ == '__main__':
     args = parser.parse_args()

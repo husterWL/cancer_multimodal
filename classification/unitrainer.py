@@ -55,9 +55,7 @@ class Trainer():
         return val_loss / len(valid_lodaer), metrics, report_dict
 
     def predict(self, test_loader):
-        '''
-        重写
-        '''
+
         self.model.eval()
         test_loss = 0
         true_labels, pred_labels = [], []
@@ -65,12 +63,12 @@ class Trainer():
         for batch in tqdm(test_loader, desc='----- [Predicting] '):
             tensors, labels = batch
             tensors, labels = tensors.to(self.device), labels.to(self.device)
-            pred, loss = self.model(tensors, labels = labels)
+            pred = self.model(tensors)
 
-            test_loss += loss.item()
+
             true_labels.extend(labels.tolist())
             pred_labels.extend(pred.tolist())
 
         # return [(guid, label) for guid, label in zip(pred_guids, pred_labels)]
         metrics, report_dict = self.processor.metric(true_labels, pred_labels)
-        return test_loss / len(test_loader), metrics, report_dict
+        return metrics, report_dict

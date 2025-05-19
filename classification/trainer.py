@@ -47,7 +47,7 @@ class multitrainer():            #训练器
         for batch in tqdm(val_loader, desc='----- [Validing] '):
             guids, imgs, ehrs, labels = batch
             imgs, ehrs, labels = imgs.to(self.device), ehrs.to(self.device), labels.to(self.device)  
-            pred, loss = self.model(imgs, ehrs, labels=labels)
+            pred, loss = self.model(imgs, ehrs, labels = labels)
 
             # metric
             val_loss += loss.item()
@@ -60,14 +60,17 @@ class multitrainer():            #训练器
     def predict(self, test_loader):
 
         self.model.eval()   #设置为评估模式
-        pred_guids, pred_labels = [], []
+        pred_guids, pred_labels, true_labels = [], [], []
 
         for batch in tqdm(test_loader, desc='----- [Predicting] '):
             guids, imgs, ehrs, labels = batch
             imgs, ehrs = imgs.to(self.device), ehrs.to(self.device)
             pred = self.model(imgs, ehrs)
 
-            pred_guids.extend(guids)
+            # pred_guids.extend(guids)
+            true_labels.extend(labels.tolist())
             pred_labels.extend(pred.tolist())
 
-        return [(guid, label) for guid, label in zip(pred_guids, pred_labels)]
+        # return [(guid, label) for guid, label in zip(pred_guids, pred_labels)]
+        metrics, report_dict = self.processor.metric(true_labels, pred_labels)
+        return metrics, report_dict
