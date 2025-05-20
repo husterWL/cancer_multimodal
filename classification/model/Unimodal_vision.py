@@ -34,3 +34,21 @@ class Univision(nn.Module):
             return pred_labels, loss
         else:
             return pred_labels  #predict
+
+class UniEHR(nn.Module):
+
+    def __init__(self, config):
+        super(UniEHR, self).__init__()
+
+        self.classifier = nn.Sequential(
+            nn.Linear(config.output_hidden_dimension, config.num_labels),
+            # nn.Softmax()
+            )
+    
+        self.loss_func = nn.CrossEntropyLoss()
+
+    def forward(self, emrs, labels=None):
+        
+        features = emrs
+        prob_vector = self.classifier(features)
+        pred_labels = torch.argmax(prob_vector, dim = 1)

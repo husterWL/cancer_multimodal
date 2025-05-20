@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 
-EMR_FEATURES = [ 'Patient ID', 
+EMR_FEATURES = ['Patient ID', 
                  'Age', 'Gender', 'Disease Course Type', 'Personal Tumor History', 'Family Tumor History',
                  'Prophase Treatment', 'Neoadjuvant Chemotherapy', 'Dimple Sign', 'Orange Peel Appearance',
                  'Redness And Swelling Of Skin', 'Skin Ulcers', 'Tumor', 'Breast Deformation', 'Nipple Change',

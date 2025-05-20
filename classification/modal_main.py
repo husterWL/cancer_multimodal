@@ -162,10 +162,12 @@ def test():
     
     tacc, report_dict = trainer.predict(test_loader)
     print('Test Acc: {}'.format(tacc))
-    print('accuracy:{}'.format(report_dict['accuracy']), '\n', 
-          'precision:{}'.format(report_dict['weighted avg']['precision']), '\n',
-          'recall:{}'.format(report_dict['weighted avg']['recall']), '\n', 
-          'f1-score:{}'.format(report_dict['weighted avg']['f1-score']))
+    print(
+          'accuracy:{}\n'.format(report_dict['accuracy']), 
+          'precision:{}\n'.format(report_dict['weighted avg']['precision']),
+          'recall:{}\n'.format(report_dict['weighted avg']['recall']),
+          'f1-score:{}'.format(report_dict['weighted avg']['f1-score'])
+        )
     
 
 

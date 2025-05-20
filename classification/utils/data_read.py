@@ -134,6 +134,11 @@ def read_tensor_emr(labelfile, tensor_path, emr_path):
     ]
     '''
 
+def read_exclusion(labelfile, tensor_path, emr_path):
+    train_list , test_list = [], []
+
+    
+    return train_list, test_list
 
 # labelfile = r'D:\BaiduNetdiskDownload\multimodal_breast_cancer\Image_list_new.csv'
 # tensor_path = r'D:\BaiduNetdiskDownload\multimodal_breast_cancer\Features_directory\pt_files'
@@ -147,6 +152,7 @@ def read_tensor_emr(labelfile, tensor_path, emr_path):
     #尝试将Tensor对象序列化为JSON时，会遇到错误TypeError: Object of type 'Tensor' is not JSON serializable。这是因为Tensor对象不是JSON序列化数据类型，所以无法直接写入JSON文件。
     #需要先将tensor转换为list
     #但是直接转换为list，会丢失精度，所以可以转换为字符串。并且json格式也比.pt格式占据的空间大很多
+
 
 '''
 可以只对id写入json，然后tensor，emr，这些，在载入内存之后，可以根据id去取tensor，emr等数据。

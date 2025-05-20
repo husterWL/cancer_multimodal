@@ -90,7 +90,6 @@ class Bicrossmodel(nn.Module):
         # print('weight_dtype', self.modality_proj_emr.weight.dtype, '\n')
         # print(tensors.dtype, emrs.dtype)
 
-
         aligned_img = self.modality_proj_img(tensors)
         aligned_emr = self.modality_proj_emr(emrs)
 
