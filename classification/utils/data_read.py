@@ -134,11 +134,7 @@ def read_tensor_emr(labelfile, tensor_path, emr_path):
     ]
     '''
 
-def read_exclusion(labelfile, tensor_path, emr_path):
-    train_list , test_list = [], []
 
-    
-    return train_list, test_list
 
 # labelfile = r'D:\BaiduNetdiskDownload\multimodal_breast_cancer\Image_list_new.csv'
 # tensor_path = r'D:\BaiduNetdiskDownload\multimodal_breast_cancer\Features_directory\pt_files'
@@ -208,3 +204,45 @@ with open('./classification/data/data_id.json', 'r') as f:
 后期还可以重新划分一下，按照患者来划分
 
 '''
+
+with open('./classification/data/data_id.json', 'r', encoding = 'utf-8') as f:
+    exclusionid = open('./classification/data/exclusiondata.txt', 'r', encoding = 'utf-8').readlines()
+    for i in range(len(exclusionid)): exclusionid[i] = exclusionid[i].strip('\n')
+    # print(exclusionid)
+    data_id = json.load(f)
+    
+    random.shuffle(data_id)
+    
+    train_data = []
+    valid_data = []
+    test_data = []
+
+    for id in data_id:
+        x = id['id'].split('_')[0]
+        if x not in exclusionid:
+            train_data.append(id)
+        else:
+            test_data.append(id)
+    
+    validratio = 0.1
+    split_point = int(len(train_data) * (1 - validratio))
+    valid_data = train_data[split_point:]
+    train_data = train_data[:split_point]
+
+    print(len(train_data), '\n', len(valid_data), '\n', len(test_data))
+    print('finish')
+
+    with open('./classification/data/exclusion_train_id.txt', 'w') as f:
+        for id in tqdm(train_data, desc='-----------train data'):
+            f.write(id['id'])
+            f.write('\n')
+    
+    with open('./classification/data/exclusion_valid_id.txt', 'w') as f:
+        for id in tqdm(valid_data, desc='-----------valid data'):
+            f.write(id['id'])
+            f.write('\n')
+
+    with open('./classification/data/exclusion_test_id.txt', 'w') as f:
+        for id in tqdm(test_data, desc = '-----------test data'):
+            f.write(id['id'])
+            f.write('\n')
