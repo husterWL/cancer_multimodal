@@ -21,7 +21,7 @@ parser.add_argument('--weight_decay', default = 1e-4, help = '设置权重衰减
 parser.add_argument('--epoch', default = 10, help = '设置训练轮数', type = int)
 parser.add_argument('--do_test', action = 'store_true', help = '预测测试集数据')
 parser.add_argument('--load_model_path', default = None, help = '已经训练好的模型路径', type = str)
-parser.add_argument('--model_type', default = 'only_image', action = 'store', help = '是否多模态融合', type = str)
+parser.add_argument('--model_type', default = 'unimodal', action = 'store', help = '是否多模态融合', type = str)
 parser.add_argument('--fusion_type', default = 'Concatenate', action = 'store', help = '多模态融合方式', type = str)
 
 args = parser.parse_args()
@@ -35,17 +35,17 @@ config.epoch = args.epoch
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-if config.model_type == 'only_image':
+if config.model_type == 'unimodal':
     processor = Uni_processor(config)
-    from model.Unimodal_vision import Univision
+    from classification.model.Unimodal import Univision
     model = Univision(config)
     trainer = Trainer(config, processor, model, device)
 elif config.model_type == 'multimodal':
     processor = Processor(config)
     if config.fusion_type == 'Concatenate':
-        from model.With_EHR import Concatmodel as FuseModel
+        from classification.model.Multimodal import Concatmodel as FuseModel
     if config.fusion_type == 'Bicrossmodel':
-        from model.With_EHR import Bicrossmodel as FuseModel
+        from classification.model.Multimodal import Bicrossmodel as FuseModel
     model = FuseModel(config)
     trainer = multitrainer(config, processor, model, device)
 
@@ -53,7 +53,7 @@ elif config.model_type == 'multimodal':
 
 def train():
 
-    if not config.model_type == 'only_image':
+    if not config.model_type == 'unimodal':
         data = read_tensor_emr(config.labelfile, config.tensor_path, config.emr_path)
     
     else:
@@ -140,7 +140,7 @@ def train():
 
 def test():
 
-    if not config.model_type == 'only_image':
+    if not config.model_type == 'unimodal':
         data = read_tensor_emr(config.labelfile, config.tensor_path, config.emr_path)
     
     else:

@@ -74,15 +74,15 @@ class Bicrossmodel(nn.Module):
         self.modality_proj_img = nn.Linear(config.img_dimension, config.fusion_hidden_dimension)
         self.modality_proj_emr = nn.Linear(config.emr_dimension, config.fusion_hidden_dimension)    #后续可以尝试加入高斯噪声
 
-        self.clasiffier = nn.Sequential(
+        self.classifier = nn.Sequential(
             nn.Dropout(config.fuse_dropout),
             nn.Linear(config.middle_hidden_dimension, config.output_hidden_dimension),
             nn.ReLU(inplace = True),
             nn.Dropout(config.fuse_dropout),
-            nn.Linear(config.output_hidden_dimension, config.num_labels),
+            nn.Linear(config.output_hidden_dimension, config.num_labels)
         )
 
-        self.loss_fuc = nn.CrossEntropyLoss()
+        self.loss_func = nn.CrossEntropyLoss()
         
     def forward(self, tensors, emrs, labels = None):
         
@@ -96,13 +96,13 @@ class Bicrossmodel(nn.Module):
         focused_img, _ = self.fuse_attention(aligned_emr, aligned_img, aligned_img)
         focused_emr, _ = self.fuse_attention(aligned_img, aligned_emr, aligned_emr)
 
-        fused_feature = torch.cat([focused_img, focused_emr], dim=-1)
+        fused_feature = torch.cat([focused_img, focused_emr], dim = -1)
 
-        prob_logits = self.clasiffier(fused_feature)
+        prob_logits = self.classifier(fused_feature)
         pred_labels = torch.argmax(prob_logits, dim = 1)
 
         if labels is not None:
-            loss = self.loss_fuc(prob_logits, labels)
+            loss = self.loss_func(prob_logits, labels)
             return pred_labels, loss
         else:
             return pred_labels
@@ -118,11 +118,32 @@ class Concatmodel(nn.Module):
             nn.Linear(config.middle_hidden_dimension, config.output_hidden_dimension),
             nn.ReLU(inplace = True),
             nn.Dropout(config.last_dropout),
-            nn.Linear(config.output_hidden_dimension, config.num_labels),
-            # nn.Softmax()
+            nn.Linear(config.output_hidden_dimension, config.num_labels)
         )
+
+        self.modality_proj_img = nn.Linear(config.img_dimension, config.fusion_hidden_dimension)
+        self.modality_proj_emr = nn.Linear(config.emr_dimension, config.fusion_hidden_dimension)
+
         self.loss_func = nn.CrossEntropyLoss()
     
     def forward(self, tensors, emrs, labels = None):
 
+        aligned_img = self.modality_proj_img(tensors)
+        aligned_emr = self.modality_proj_emr(emrs)
+        fused_feature = torch.cat([aligned_img, aligned_emr], dim = -1)
+        
+        prob_logits = self.classifier(fused_feature)
+        pred_labels = torch.argmax(prob_logits, dim = 1)
+
+        if labels is not None:
+            loss = self.loss_func(prob_logits, labels)
+            return pred_labels, loss
+        else:
+            return pred_labels
+        
+class GNN_Based(nn.Module):
+    def __init__(self, config):
+        super(GNN_Based, self).__init__()
+
+    def forward():
         pass
