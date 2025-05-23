@@ -205,6 +205,7 @@ with open('./classification/data/data_id.json', 'r') as f:
 
 '''
 
+'''
 with open('./classification/data/data_id.json', 'r', encoding = 'utf-8') as f:
     exclusionid = open('./classification/data/exclusiondata.txt', 'r', encoding = 'utf-8').readlines()
     for i in range(len(exclusionid)): exclusionid[i] = exclusionid[i].strip('\n')
@@ -246,3 +247,4 @@ with open('./classification/data/data_id.json', 'r', encoding = 'utf-8') as f:
         for id in tqdm(test_data, desc = '-----------test data'):
             f.write(id['id'])
             f.write('\n')
+'''

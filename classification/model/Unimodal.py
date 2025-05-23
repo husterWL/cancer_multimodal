@@ -53,7 +53,7 @@ class UniEHR(nn.Module):
         prob_vector = self.classifier(features)
         pred_labels = torch.argmax(prob_vector, dim = 1)
 
-class Univision_sa(nn.Module):
+class Univision_sa(nn.Module):  #效果非常差   毕竟不是序列数据
     
     def __init__(self, config):
         super(Univision_sa, self).__init__()
@@ -62,7 +62,7 @@ class Univision_sa(nn.Module):
             embed_dim = config.img_dimension,
             num_heads = config.num_heads,
             batch_first = True,
-            dropout = config.attntion_dropout
+            dropout = config.attention_dropout
         )
 
         self.classifier = nn.Sequential(

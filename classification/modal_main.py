@@ -21,8 +21,8 @@ parser.add_argument('--weight_decay', default = 1e-4, help = '设置权重衰减
 parser.add_argument('--epoch', default = 10, help = '设置训练轮数', type = int)
 parser.add_argument('--do_test', action = 'store_true', help = '预测测试集数据')
 parser.add_argument('--load_model_path', default = None, help = '已经训练好的模型路径', type = str)
-parser.add_argument('--model_type', default = 'unimodal', action = 'store', help = '是否多模态融合', type = str)
-parser.add_argument('--fusion_type', default = 'Concatenate', action = 'store', help = '多模态融合方式', type = str)
+parser.add_argument('--model_type', default = 'multimodal', action = 'store', help = '是否多模态融合', type = str)
+parser.add_argument('--fusion_type', default = 'Bicrossmodel', action = 'store', help = '多模态融合方式', type = str)
 
 args = parser.parse_args()
 config.learning_rate = args.lr
@@ -30,22 +30,26 @@ config.weight_decay = args.weight_decay
 config.epoch = args.epoch
 # config.load_model_path = args.load_model_path
 
-# config.model_type = args.model_type
-# config.fusion_type = args.fusion_type
+config.model_type = args.model_type
+config.fusion_type = args.fusion_type
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 if config.model_type == 'unimodal':
     processor = Uni_processor(config)
-    from classification.model.Unimodal import Univision
-    model = Univision(config)
+    if config.fusion_type == 'Univision':
+        from model.Unimodal import Univision
+        model = Univision(config)
+    elif config.fusion_type == 'Univision_sa':
+        from model.Unimodal import Univision_sa
+        model = Univision_sa(config)
     trainer = Trainer(config, processor, model, device)
 elif config.model_type == 'multimodal':
     processor = Processor(config)
     if config.fusion_type == 'Concatenate':
-        from classification.model.Multimodal import Concatmodel as FuseModel
+        from model.Multimodal import Concatmodel as FuseModel
     if config.fusion_type == 'Bicrossmodel':
-        from classification.model.Multimodal import Bicrossmodel as FuseModel
+        from model.Multimodal import Bicrossmodel as FuseModel
     model = FuseModel(config)
     trainer = multitrainer(config, processor, model, device)
 
@@ -66,10 +70,10 @@ def train():
     在这里重新将以字典为元素的列表再映射为一个字典，当然这只适合id唯一的情况
     '''
     lookup_data = {dic['id']: dic for dic in data}
-    with open('./data/train_id.txt', 'r') as f:
+    with open('./data/exclusion_train_id.txt', 'r') as f:
         for line in f.readlines():
             train_data.append(lookup_data[line.strip('\n')])
-    with open('./data/valid_id.txt', 'r') as f:
+    with open('./data/exclusion_valid_id.txt', 'r') as f:
         for line in f.readlines():
             val_data.append(lookup_data[line.strip('\n')])
 
@@ -147,7 +151,7 @@ def test():
         data = read_tensor(config.labelfile, config.tensor_path)
     test_data = []
     lookup_data = {dic['id']: dic for dic in data}
-    with open('./data/test_id.txt', 'r') as f:
+    with open('./data/exclusion_test_id.txt', 'r') as f:
         for line in f.readlines():
             test_data.append(lookup_data[line.strip('\n')])
 
