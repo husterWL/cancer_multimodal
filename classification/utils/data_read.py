@@ -8,6 +8,8 @@ from torch.utils.data import DataLoader
 import json
 from tqdm import tqdm
 from emr_process import EMR_FEATURES, only_29dim, one_hot
+import pickle
+import numpy as np
 
 # print(os.getcwd())
 
@@ -89,6 +91,8 @@ def read_tensor_emr(labelfile, tensor_path, emr_path):
     emr_df = pd.read_csv(emr_path)
     # only_29dim(emr_df.loc[:, EMR_FEATURES[1: -1]])
     emr_df_ = one_hot(emr_df.loc[:, EMR_FEATURES[1: -1]])
+    kg_embeddings = pickle.load(open('./data/patient_embeddings.pkl', 'rb'))
+    kg_zero = np.zeros(512, np.float32)
 
     benign_num = 0
     malignant_num = 0
@@ -109,10 +113,14 @@ def read_tensor_emr(labelfile, tensor_path, emr_path):
             #vaalues为：[[2 2 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 1 1 1 1 1 1 1 1 2 0 0 0]]
 
             emr = emr_df_.loc[emr_df['Patient ID'] == name1].values[0]
+            if name1 in kg_embeddings:
+                kg = kg_embeddings[name1][0]
+            else:
+                kg = kg_zero
 
             for i in range(len(tensor)):
                 id = '_'.join([name1, name2, str(i + 1)])
-                case = {'id': id, 'tensor': tensor[i], 'emr': torch.FloatTensor(emr), 'label': label}
+                case = {'id': id, 'tensor': tensor[i], 'emr': torch.FloatTensor(emr), 'kg': torch.FloatTensor(kg), 'label': label}
                 '''
                 # 似乎可以考虑使用元组，这样可以减少内存占用
                 case = (id, tensor[i], torch.LongTensor(emr), label)
@@ -141,7 +149,7 @@ def read_tensor_emr(labelfile, tensor_path, emr_path):
 # emr_path = r'D:\BaiduNetdiskDownload\multimodal_breast_cancer\EMR.csv'
 # list = read_tensor_emr(labelfile, tensor_path, emr_path)
 # print(list[0]['tensor'].dtype)
-# print()
+# print(list[0])
 
 # with open('./classification/data/data_id.json', 'w') as wf:
 #     json.dump(list2, wf, indent = 4) 

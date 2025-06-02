@@ -22,7 +22,7 @@ parser.add_argument('--epoch', default = 10, help = '设置训练轮数', type =
 parser.add_argument('--do_test', action = 'store_true', help = '预测测试集数据')
 parser.add_argument('--load_model_path', default = None, help = '已经训练好的模型路径', type = str)
 parser.add_argument('--model_type', default = 'multimodal', action = 'store', help = '是否多模态融合', type = str)
-parser.add_argument('--fusion_type', default = 'Bicrossmodel', action = 'store', help = '多模态融合方式', type = str)
+parser.add_argument('--fusion_type', default = 'KGBased', action = 'store', help = '多模态融合方式', type = str)
 
 args = parser.parse_args()
 config.learning_rate = args.lr
@@ -50,6 +50,8 @@ elif config.model_type == 'multimodal':
         from model.Multimodal import Concatmodel as FuseModel
     if config.fusion_type == 'Bicrossmodel':
         from model.Multimodal import Bicrossmodel as FuseModel
+    if config.fusion_type == 'KGBased':
+        from model.Multimodal import KGBased as FuseModel
     model = FuseModel(config)
     trainer = multitrainer(config, processor, model, device)
 

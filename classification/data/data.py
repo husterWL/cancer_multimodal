@@ -2,8 +2,10 @@ import os
 import re
 import csv
 import pandas as pd
+import numpy as np
+import pickle
 
-
+'''
 file_path = r'D:\BaiduNetdiskDownload\multimodal_breast_cancer\Result_directory\stitches'
 
 filenames = []
@@ -37,7 +39,7 @@ print(len(filenames2))
 for id in filenames:
     if id not in filenames2:
         print(id)
-
+'''
 # frame = pd.DataFrame(columns=['case_id', 'slide_id', 'label'])
 
 # for root, dirs, files in os.walk(file_path):
@@ -75,3 +77,23 @@ for id in filenames:
 
 # process_csv('Malignant_pathological_image7')
 
+path1 = './classification/data/entity_embeddings.npy'
+path2 = './classification/data/patient_embeddings.pkl'
+
+# load_array1 = np.load(path1, allow_pickle = True)
+# print(load_array1)
+
+load_array2 = pickle.load(open(path2, 'rb'))
+# print(load_array2['S0005410'])
+
+if 'S0005410' in load_array2: print('yes')
+else: print('no')
+
+# keys_list = list(load_array2.keys())
+
+# for i in range(len(load_array2)):
+#     print(i)
+#     print(load_array2[keys_list[i]][0])
+
+# zero = np.zeros(512, np.float32)
+# print(zero)

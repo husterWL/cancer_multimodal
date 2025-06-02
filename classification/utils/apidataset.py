@@ -11,18 +11,19 @@ from torch.utils.data import Dataset
 
 class apidataset(Dataset):
 
-    def __init__(self, guids, imgs, EHRs, labels):
+    def __init__(self, guids, imgs, EHRs, KGs, labels):
         super().__init__()
         self.guids = guids
         self.imgs = imgs
         self.ehrs = EHRs
+        self.kgs =  KGs
         self.labels = labels
     
     def __len__(self):
         return len(self.guids)  #返回有多少个样本
     
     def __getitem__(self, index):
-        return self.guids[index], self.imgs[index], self.ehrs[index], self.labels[index]
+        return self.guids[index], self.imgs[index], self.ehrs[index], self.kgs[index], self.labels[index]
     
     '''
     有问题的collate_fn函数
@@ -38,10 +39,12 @@ class apidataset(Dataset):
         imgs = torch.stack(imgs)
         ehrs = [b[2] for b in batch]
         ehrs = torch.stack(ehrs)
-        labels = torch.LongTensor([b[3] for b in batch])
+        kgs = [b[3] for b in batch]
+        kgs = torch.stack(kgs)
+        labels = torch.LongTensor([b[4] for b in batch])
 
 
-        return guids, imgs, ehrs, labels
+        return guids, imgs, ehrs, kgs, labels
     
 class uniapidataset(Dataset):
 
