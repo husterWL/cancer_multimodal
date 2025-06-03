@@ -7,7 +7,7 @@ class config:
     labelfile = r'D:\BaiduNetdiskDownload\multimodal_breast_cancer\Image_list_new.csv'
     emr_path = r'D:\BaiduNetdiskDownload\multimodal_breast_cancer\EMR.csv'
     # load_model_path = r'D:\BaiduNetdiskDownload\multimodal_breast_cancer\_model\unimodal\pytorch_model_unimodalsa_0523.bin'
-    load_model_path = r'D:\BaiduNetdiskDownload\multimodal_breast_cancer\_model\multimodal\pytorch_model_multimodal_kgbased_0602.bin'
+    load_model_path = r'D:\BaiduNetdiskDownload\multimodal_breast_cancer\_model\multimodal\pytorch_model_multimodal_kgbased_0603.bin'
     output_path = r'D:\BaiduNetdiskDownload\multimodal_breast_cancer\_model'
     all_data_path = r'./data/data.json'
 
@@ -20,7 +20,7 @@ class config:
     train_ratio = 0.8
     valid_ratio = 0.1
     test_ratio = 0.1
-    patience = 10
+    patience = 6
 
     #model parameters
     first_dropout = 0.4

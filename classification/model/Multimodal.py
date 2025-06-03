@@ -172,16 +172,16 @@ class KGBased(nn.Module):
             nn.ReLU(inplace = True),
             nn.Dropout(config.fuse_dropout),
             nn.Linear(config.output_hidden_dimension, config.num_labels),
-            nn.Softmax(dim = 1)
+            # nn.Softmax(dim = 1)
         )
 
         self.classifier_kg = nn.Sequential(
-            nn.Dropout(0.4),
+            nn.Dropout(0.3),
             nn.Linear(512, 256),
             nn.ReLU(inplace = True),
-            nn.Dropout(0.4),
+            nn.Dropout(0.3),
             nn.Linear(256, config.num_labels),
-            nn.Softmax(dim = 1)
+            # nn.Softmax(dim = 1)
         )
 
         self.loss_func = nn.CrossEntropyLoss()
