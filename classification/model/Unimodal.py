@@ -20,7 +20,6 @@ class Univision(nn.Module):
             nn.Dropout(config.last_dropout),
             nn.Linear(config.output_hidden_dimension, config.num_labels),
             # nn.Softmax()
-            
         )
         self.loss_func = nn.CrossEntropyLoss()
 
@@ -70,15 +69,18 @@ class Univision_sa(nn.Module):  #效果非常差   毕竟不是序列数据
             nn.Linear(config.middle_hidden_dimension, config.output_hidden_dimension),
             nn.ReLU(inplace = True),
             nn.Dropout(config.last_dropout),
-            nn.Linear(config.output_hidden_dimension, config.num_labels)
+            nn.Linear(config.output_hidden_dimension, config.num_labels),
+            # nn.Softmax(dim = 1)
         )
 
         self.loss_func = nn.CrossEntropyLoss()
 
     def forward(self, tensors, labels = None):
         
+        # print(tensors.shape) (16, 1024)
+        tensors = tensors.unsqueeze(1)
         sa_imgtensors, _ = self.selfattention(tensors, tensors, tensors)
-        
+        sa_imgtensors = sa_imgtensors.squeeze(1)
         prob_logits = self.classifier(sa_imgtensors)
         pred_labels = torch.argmax(prob_logits, dim = 1)
 
