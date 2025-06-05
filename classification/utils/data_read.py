@@ -60,6 +60,50 @@ def read_tensor(labelfile, tensor_path):
 
     return tensor_list
 
+def read_emr(labelfile, tensor_path, emr_path):
+    emr_list = []
+    id_list = []
+    df_label = pd.read_csv(labelfile)
+    emr_df = pd.read_csv(emr_path)
+    # only_29dim(emr_df.loc[:, EMR_FEATURES[1: -1]])
+    emr_df_ = one_hot(emr_df.loc[:, EMR_FEATURES[1: -1]])
+    
+
+    benign_num = 0
+    malignant_num = 0
+
+    for root, dirs, files in os.walk(tensor_path):
+        for file in files:
+            name = re.match(r'^[^\.]+', file).group(0)  #benign_S0000004_1
+            name1 = name.split('_')[1]  #S0000004
+            name2 = name.split('_')[2]  
+            if df_label.loc[df_label['slide_id'] == name, 'label'].values == 'normal_tissue':
+                label = 'benign'
+                benign_num += 1
+            else:
+                label = 'malignant'
+                malignant_num += 1
+            tensor = torch.load(os.path.join(root, file))
+
+            emr = emr_df_.loc[emr_df['Patient ID'] == name1].values[0]
+
+            for i in range(len(tensor)):
+                id = '_'.join([name1, name2, str(i + 1)])
+                case = {'id': id, 'tensor': torch.FloatTensor(emr), 'label': label}
+                '''
+                # 似乎可以考虑使用元组，这样可以减少内存占用
+                case = (id, tensor[i], torch.LongTensor(emr), label)
+                '''
+                emr_list.append(case)
+
+
+    print(len(emr_list))
+    # print(tensor_list[0])
+    print("benign:", benign_num, "malignant:", malignant_num)
+    print("读取完成")
+
+    return emr_list
+
 def split_dataset(data, train_ratio, valid_ratio, test_ratio):   #分割数据集
     assert train_ratio + valid_ratio + test_ratio == 1, 'Ratio error.'   #判断划分是否正确
     

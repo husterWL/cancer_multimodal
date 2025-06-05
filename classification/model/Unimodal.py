@@ -34,23 +34,35 @@ class Univision(nn.Module):
         else:
             return pred_labels  #predict
 
-class UniEHR(nn.Module):
+class Uniemr(nn.Module):
 
     def __init__(self, config):
-        super(UniEHR, self).__init__()
+        super(Uniemr, self).__init__()
 
         self.classifier = nn.Sequential(
-            nn.Linear(config.output_hidden_dimension, config.num_labels),
-            # nn.Softmax()
-            )
-    
+            nn.Dropout(config.first_dropout),
+            nn.Linear(512, 256),
+            nn.ReLU(inplace = True),
+            nn.Dropout(config.last_dropout),
+            nn.Linear(256, config.num_labels),
+            # nn.Softmax(dim = 1)
+        )
+
+        self.modality_proj_emr = nn.Linear(config.emr_dimension, config.fusion_hidden_dimension)
+
         self.loss_func = nn.CrossEntropyLoss()
 
-    def forward(self, emrs, labels=None):
+    def forward(self, emrs, labels = None):
         
-        features = emrs
-        prob_vector = self.classifier(features)
-        pred_labels = torch.argmax(prob_vector, dim = 1)
+        features = self.modality_proj_emr(emrs)
+        prob_logits = self.classifier(features)
+        pred_labels = torch.argmax(prob_logits, dim = 1)
+
+        if labels is not None:
+            loss = self.loss_func(prob_logits, labels)
+            return pred_labels, loss
+        else:
+            return pred_labels
 
 class Univision_sa(nn.Module):  #效果非常差   毕竟不是序列数据
     

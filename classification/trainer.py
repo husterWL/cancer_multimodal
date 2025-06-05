@@ -24,7 +24,11 @@ class multitrainer():            #训练器
         for batch in tqdm(train_loader, desc='----- [Training] '):
             guids, imgs, ehrs, kgs, labels = batch
             imgs, ehrs, kgs, labels = imgs.to(self.device), ehrs.to(self.device), kgs.to(self.device), labels.to(self.device)
-            pred, loss = self.model(imgs, ehrs, kgs, labels = labels) 
+            pred, loss = self.model(imgs, ehrs, kgs, labels = labels)
+
+            # guids, imgs, ehrs, labels = batch
+            # imgs, ehrs, labels = imgs.to(self.device), ehrs.to(self.device), labels.to(self.device)
+            # pred, loss = self.model(imgs, ehrs, labels = labels)
             
             # metric
             loss_list.append(loss.item())
@@ -49,6 +53,10 @@ class multitrainer():            #训练器
             imgs, ehrs, kgs, labels = imgs.to(self.device), ehrs.to(self.device), kgs.to(self.device), labels.to(self.device)
             pred, loss = self.model(imgs, ehrs, kgs, labels = labels)
 
+            # guids, imgs, ehrs, labels = batch
+            # imgs, ehrs, labels = imgs.to(self.device), ehrs.to(self.device), labels.to(self.device)
+            # pred, loss = self.model(imgs, ehrs, labels = labels)
+
             # metric
             val_loss += loss.item()
             true_labels.extend(labels.tolist())
@@ -66,6 +74,10 @@ class multitrainer():            #训练器
             guids, imgs, ehrs, kgs, labels = batch
             imgs, ehrs, kgs = imgs.to(self.device), ehrs.to(self.device), kgs.to(self.device)
             pred = self.model(imgs, ehrs, kgs)
+
+            # guids, imgs, ehrs, labels = batch
+            # imgs, ehrs = imgs.to(self.device), ehrs.to(self.device)
+            # pred, loss = self.model(imgs, ehrs)
 
             # pred_guids.extend(guids)
             true_labels.extend(labels.tolist())

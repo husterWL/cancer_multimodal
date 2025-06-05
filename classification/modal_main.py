@@ -5,7 +5,7 @@ sys.path.append('./utils')
 import torch
 import argparse
 from Config import config
-from utils.data_read import read_tensor, split_dataset, read_tensor_emr
+from utils.data_read import read_tensor, split_dataset, read_tensor_emr, read_emr
 from utils.common import save_model, loss_draw, acc_draw, other_draw, earlystop_draw
 from utils.dataprocess import Uni_processor, Processor
 from unitrainer import Trainer
@@ -21,8 +21,8 @@ parser.add_argument('--weight_decay', default = 1e-4, help = '设置权重衰减
 parser.add_argument('--epoch', default = 10, help = '设置训练轮数', type = int)
 parser.add_argument('--do_test', action = 'store_true', help = '预测测试集数据')
 parser.add_argument('--load_model_path', default = None, help = '已经训练好的模型路径', type = str)
-parser.add_argument('--model_type', default = 'multimodal', action = 'store', help = '是否多模态融合', type = str)
-parser.add_argument('--fusion_type', default = 'Bicrossmodel', action = 'store', help = '多模态融合方式', type = str)
+parser.add_argument('--model_type', default = 'unimodal', action = 'store', help = '是否多模态融合', type = str)
+parser.add_argument('--fusion_type', default = 'Uniemr', action = 'store', help = '多模态融合方式', type = str)
 
 args = parser.parse_args()
 config.learning_rate = args.lr
@@ -38,15 +38,16 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 if config.model_type == 'unimodal':
     processor = Uni_processor(config)
     if config.fusion_type == 'Univision':
-        from model.Unimodal import Univision
-        model = Univision(config)
+        from model.Unimodal import Univision as unimodel
     elif config.fusion_type == 'Univision_sa':
-        from model.Unimodal import Univision_sa
-        model = Univision_sa(config)
+        from model.Unimodal import Univision_sa as unimodel
+    elif config.fusion_type == 'Uniemr':
+        from model.Unimodal import Uniemr as unimodel
+    model = unimodel(config)
     trainer = Trainer(config, processor, model, device)
 elif config.model_type == 'multimodal':
     processor = Processor(config)
-    if config.fusion_type == 'Concatenate':
+    if config.fusion_type == 'Concatmodel':
         from model.Multimodal import Concatmodel as FuseModel
     if config.fusion_type == 'Bicrossmodel':
         from model.Multimodal import Bicrossmodel as FuseModel
@@ -63,7 +64,8 @@ def train():
         data = read_tensor_emr(config.labelfile, config.tensor_path, config.emr_path)
     
     else:
-        data = read_tensor(config.labelfile, config.tensor_path)
+        # data = read_tensor(config.labelfile, config.tensor_path)
+        data = read_emr(config.labelfile, config.tensor_path, config.emr_path)
         
     train_data = []
     val_data = []
@@ -150,7 +152,9 @@ def test():
         data = read_tensor_emr(config.labelfile, config.tensor_path, config.emr_path)
     
     else:
-        data = read_tensor(config.labelfile, config.tensor_path)
+        # data = read_tensor(config.labelfile, config.tensor_path)
+        data = read_emr(config.labelfile, config.tensor_path, config.emr_path)
+
     test_data = []
     lookup_data = {dic['id']: dic for dic in data}
     with open('./data/exclusion_test_id.txt', 'r') as f:
