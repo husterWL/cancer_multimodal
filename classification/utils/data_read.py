@@ -54,7 +54,6 @@ def read_tensor(labelfile, tensor_path):
                 tensor_list.append(case)
 
     print(len(tensor_list))
-    # print(tensor_list[0])
     print("benign:", benign_num, "malignant:", malignant_num)   #benign: 0 malignant: 3693
     print("读取完成")
 
@@ -90,18 +89,10 @@ def read_emr(labelfile, tensor_path, emr_path):
             for i in range(len(tensor)):
                 id = '_'.join([name1, name2, str(i + 1)])
                 case = {'id': id, 'tensor': torch.FloatTensor(emr), 'label': label}
-                '''
-                # 似乎可以考虑使用元组，这样可以减少内存占用
-                case = (id, tensor[i], torch.LongTensor(emr), label)
-                '''
                 emr_list.append(case)
-
-
     print(len(emr_list))
-    # print(tensor_list[0])
     print("benign:", benign_num, "malignant:", malignant_num)
     print("读取完成")
-
     return emr_list
 
 def split_dataset(data, train_ratio, valid_ratio, test_ratio):   #分割数据集
@@ -123,9 +114,7 @@ def split_dataset(data, train_ratio, valid_ratio, test_ratio):   #分割数据�
     
     return train, valid, test
 
-def get_loader(data, batch_size):
-    dataset = Dataset(data)
-    return DataLoader(dataset, batch_size=batch_size, shuffle=True)
+
 
 def read_tensor_emr(labelfile, tensor_path, emr_path):
 
@@ -170,8 +159,6 @@ def read_tensor_emr(labelfile, tensor_path, emr_path):
                 case = (id, tensor[i], torch.LongTensor(emr), label)
                 '''
                 tensor_emr_list.append(case)
-
-
     print(len(tensor_emr_list))
     # print(tensor_list[0])
     print("benign:", benign_num, "malignant:", malignant_num)

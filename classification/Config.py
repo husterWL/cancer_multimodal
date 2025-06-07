@@ -6,8 +6,8 @@ class config:
     tensor_path = r'D:\BaiduNetdiskDownload\multimodal_breast_cancer\Features_directory\pt_files'
     labelfile = r'D:\BaiduNetdiskDownload\multimodal_breast_cancer\Image_list_new.csv'
     emr_path = r'D:\BaiduNetdiskDownload\multimodal_breast_cancer\EMR.csv'
-    load_model_path = r'D:\BaiduNetdiskDownload\multimodal_breast_cancer\_model\unimodal\pytorch_model_unimodal_uniemr_0605_1.bin'
-    # load_model_path = r'D:\BaiduNetdiskDownload\multimodal_breast_cancer\_model\multimodal\pytorch_model_multimodal_concatmodel_0605_1.bin'
+    # load_model_path = r'D:\BaiduNetdiskDownload\multimodal_breast_cancer\_model\unimodal\pytorch_model_unimodal_uniemr_0605_1.bin'
+    load_model_path = r'D:\BaiduNetdiskDownload\multimodal_breast_cancer\_model\multimodal\pytorch_model_multimodal_kgbased_0607_3.bin'
     output_path = r'D:\BaiduNetdiskDownload\multimodal_breast_cancer\_model'
     all_data_path = r'./data/data.json'
 
@@ -35,8 +35,8 @@ class config:
     model_type = 'unimodal'
     fusion_type = 'Bicrossmodel'
     fusion_hidden_dimension = 512
-    num_heads = 1
-    fuse_dropout = 0.2
+    num_heads = 8
+    fuse_dropout = 0.3
     attention_dropout = 0.3
 
     # dataloader parameters

@@ -21,8 +21,8 @@ parser.add_argument('--weight_decay', default = 1e-4, help = '设置权重衰减
 parser.add_argument('--epoch', default = 10, help = '设置训练轮数', type = int)
 parser.add_argument('--do_test', action = 'store_true', help = '预测测试集数据')
 parser.add_argument('--load_model_path', default = None, help = '已经训练好的模型路径', type = str)
-parser.add_argument('--model_type', default = 'unimodal', action = 'store', help = '是否多模态融合', type = str)
-parser.add_argument('--fusion_type', default = 'Uniemr', action = 'store', help = '多模态融合方式', type = str)
+parser.add_argument('--model_type', default = 'multimodal', action = 'store', help = '是否多模态融合', type = str)
+parser.add_argument('--fusion_type', default = 'KGBased', action = 'store', help = '多模态融合方式', type = str)
 
 args = parser.parse_args()
 config.learning_rate = args.lr
@@ -64,8 +64,8 @@ def train():
         data = read_tensor_emr(config.labelfile, config.tensor_path, config.emr_path)
     
     else:
-        # data = read_tensor(config.labelfile, config.tensor_path)
-        data = read_emr(config.labelfile, config.tensor_path, config.emr_path)
+        data = read_tensor(config.labelfile, config.tensor_path)
+        # data = read_emr(config.labelfile, config.tensor_path, config.emr_path)
         
     train_data = []
     val_data = []
@@ -88,7 +88,7 @@ def train():
 
     
     train_loader = processor(train_data, config.train_params)
-    valid_loader = processor(val_data, config.test_params)
+    valid_loader = processor(val_data, config.val_params)
     
     #不需要processor
     best_acc = 0.0
@@ -152,8 +152,8 @@ def test():
         data = read_tensor_emr(config.labelfile, config.tensor_path, config.emr_path)
     
     else:
-        # data = read_tensor(config.labelfile, config.tensor_path)
-        data = read_emr(config.labelfile, config.tensor_path, config.emr_path)
+        data = read_tensor(config.labelfile, config.tensor_path)
+        # data = read_emr(config.labelfile, config.tensor_path, config.emr_path)
 
     test_data = []
     lookup_data = {dic['id']: dic for dic in data}

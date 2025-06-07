@@ -84,7 +84,7 @@ path2 = './classification/data/patient_embeddings.pkl'
 # print(load_array1)
 
 load_array2 = pickle.load(open(path2, 'rb'))
-# print(load_array2['S0005410'])
+print(load_array2['S0000004'])
 
 if 'S0005410' in load_array2: print('yes')
 else: print('no')
