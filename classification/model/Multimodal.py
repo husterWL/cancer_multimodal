@@ -209,3 +209,62 @@ class KGBased(nn.Module):
             return pred_labels, loss
         else:
             return pred_labels
+        
+class ImgwithKG(nn.Module):
+    
+    def __init__(self, config):
+        super(ImgwithKG, self).__init__()
+        
+        self.fuse_attention_img = nn.MultiheadAttention(
+            embed_dim = config.fusion_hidden_dimension, 
+            num_heads = config.num_heads,
+            batch_first = True,
+            dropout = config.attention_dropout
+            )
+        
+        self.fuse_attention_kg = nn.MultiheadAttention(
+            embed_dim = config.fusion_hidden_dimension, 
+            num_heads = config.num_heads,
+            batch_first = True,
+            dropout = config.attention_dropout
+            )
+
+        self.modality_proj_img = nn.Linear(config.img_dimension, config.fusion_hidden_dimension)
+
+        self.classifier = nn.Sequential(#重写
+            nn.Dropout(0.3),
+            nn.Linear(512, 256),
+            nn.Tanh(),
+            nn.Dropout(0.4),
+            nn.Linear(256, config.num_labels),
+            nn.LeakyReLU(0.01, inplace = True),
+        )
+
+        self.classifier_1 = nn.Sequential(
+            nn.Dropout(config.fuse_dropout),
+            nn.Linear(config.middle_hidden_dimension, config.output_hidden_dimension),
+            nn.Tanh(),
+            nn.Dropout(config.fuse_dropout),
+            nn.Linear(config.output_hidden_dimension, config.num_labels),
+            nn.LeakyReLU(0.01, inplace = True),
+        )
+
+        self.loss_func = nn.CrossEntropyLoss()
+
+    def forward(self, tensors, emrs, kgs, labels = None):
+        
+        aligned_img = self.modality_proj_img(tensors)
+
+        focused_img, _ = self.fuse_attention_img(kgs, aligned_img, aligned_img)
+        focused_kg, _ = self.fuse_attention_kg(aligned_img, kgs, kgs)
+        
+        fused_feature = torch.cat([focused_img, focused_kg], dim = -1)
+
+        prob_logits = self.classifier_1(fused_feature)
+        pred_labels = torch.argmax(prob_logits, dim = 1)
+
+        if labels is not None:
+            loss = self.loss_func(prob_logits, labels)
+            return pred_labels, loss
+        else:
+            return pred_labels

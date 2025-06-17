@@ -10,7 +10,7 @@ from tqdm import tqdm
 from emr_process import EMR_FEATURES, only_29dim, one_hot
 import pickle
 import numpy as np
-
+import time
 # print(os.getcwd())
 
 '''
@@ -143,9 +143,23 @@ def read_tensor_emr(labelfile, tensor_path, emr_path):
                 malignant_num += 1
             tensor = torch.load(os.path.join(root, file))
             # emr = emr_df.loc[emr_df['Patient ID'] == name1, EMR_FEATURES[1: -1]].values[0]
-            #vaalues为：[[2 2 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 1 1 1 1 1 1 1 1 2 0 0 0]]
+            #values为：[[2 2 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 1 1 1 1 1 1 1 1 2 0 0 0]]
 
             emr = emr_df_.loc[emr_df['Patient ID'] == name1].values[0]
+
+            # print(emr)
+            '''
+            [ True False False False  True False  True False False False False  True
+                False False  True False False  True False False  True False False  True
+                False False  True False False  True False  True False False False  True
+                False  True False  True False False False  True False False  True False
+                False False  True False False  True False False False False False False
+                True False False False  True False False False  True False False False
+                False False False  True False False False False False False  True False
+                False  True False False False  True False False False False False  True
+                False  True False False  True False False  True False False]
+            '''
+            # time.sleep(60)
             if name1 in kg_embeddings:
                 kg = kg_embeddings[name1][0]
             else:

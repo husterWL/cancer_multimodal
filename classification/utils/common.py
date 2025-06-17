@@ -1,7 +1,3 @@
-'''
-普通的常用工具
-'''
-
 import os
 import json
 import chardet
@@ -12,6 +8,7 @@ from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
 import numpy as np
 import random
+from sklearn.metrics import roc_curve, auc
 
 def split_dataset(path, train_ratio, valid_ratio, test_ratio):   #分割数据集
     
@@ -52,7 +49,7 @@ def save_model(output_path, model_type, model):
     output_model_dir = os.path.join(output_path, model_type)    #输出模型的保存目录
     if not os.path.exists(output_model_dir): os.makedirs(output_model_dir)
     model_to_save = model.module if hasattr(model, 'module') else model     # Only save the model it-self
-    output_model_file = os.path.join(output_model_dir, 'pytorch_model_unimodal_univision_0607_2.bin')
+    output_model_file = os.path.join(output_model_dir, 'pytorch_model_multimodal_imgwithkg_0617_1.bin')
     torch.save(model_to_save.state_dict(), output_model_file)
 
 def load_model(model, filename):
@@ -129,3 +126,48 @@ def earlystop_draw(tloss_list, vloss_list, dirc):
     plt.show()
     fig.savefig(dirc, bbox_inches='tight')
     # plt.savefig(dirc, bbox_inches = 'tight')
+
+def roc_draw(true_labels, pred_scores, dirc):
+
+    if isinstance(true_labels, torch.Tensor):
+        true_labels = true_labels.cpu().numpy()
+    if isinstance(pred_scores, torch.Tensor):
+        pred_scores = pred_scores.cpu().numpy()
+
+    # 计算ROC曲线   
+    fpr, tpr, thresholds = roc_curve(true_labels, pred_scores)
+    roc_auc = auc(fpr, tpr)
+
+    dense_thresholds = np.linspace(0, 1, 1000)  # 1000个阈值点
+    tpr_dense = []
+    fpr_dense = []
+    true_tensor = torch.tensor(true_labels)
+    pred_tensor = torch.tensor(pred_scores)
+    for thresh in dense_thresholds:
+        preds = (pred_tensor >= thresh).float()
+        tp = ((preds == 1) & (true_tensor == 1)).sum().item()
+        fp = ((preds == 1) & (true_tensor == 0)).sum().item()
+        tn = ((preds == 0) & (true_tensor == 0)).sum().item()
+        fn = ((preds == 0) & (true_tensor == 1)).sum().item()
+        
+        tpr_val = tp / (tp + fn) if (tp + fn) > 0 else 0
+        fpr_val = fp / (fp + tn) if (fp + tn) > 0 else 0
+        
+        tpr_dense.append(tpr_val)
+        fpr_dense.append(fpr_val)
+    dense_auc = auc(fpr_dense, tpr_dense)
+    # 绘制ROC曲线
+    plt.figure()
+    plt.plot(fpr, tpr, color='darkorange', lw=2, 
+            label=f'ROC curve (AUC = {roc_auc:.2f})')
+    plt.plot(fpr_dense, tpr_dense, color='red', lw=1.5, 
+             label=f'密集曲线 (AUC = {dense_auc:.2f})')
+    plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
+    plt.xlim([0.0, 1.0])
+    plt.ylim([0.0, 1.05])
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('True Positive Rate')
+    plt.title('Multimodal Classifier ROC Curve')
+    plt.legend(loc="lower right")
+    plt.savefig('multimodal_roc.png')
+    # plt.savefig(dirc)

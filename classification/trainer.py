@@ -1,6 +1,7 @@
 import torch
 import torch.optim as optim
 from tqdm import tqdm
+from utils.common import roc_draw
 
 class multitrainer():            #训练器
 
@@ -85,4 +86,6 @@ class multitrainer():            #训练器
 
         # return [(guid, label) for guid, label in zip(pred_guids, pred_labels)]
         metrics, report_dict = self.processor.metric(true_labels, pred_labels)
+        roc_draw(true_labels, pred_labels, self.config.output_path + '/roc_curve.jpg')
+
         return metrics, report_dict
