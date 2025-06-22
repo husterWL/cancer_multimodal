@@ -115,7 +115,7 @@ class Bicrossmodel(nn.Module):
             loss = self.loss_func(prob_logits, labels)
             return pred_labels, loss
         else:
-            return pred_labels
+            return pred_labels, prob_logits[:, 1]
         
 class Concatmodel(nn.Module):
     
@@ -149,7 +149,7 @@ class Concatmodel(nn.Module):
             loss = self.loss_func(prob_logits, labels)
             return pred_labels, loss
         else:
-            return pred_labels
+            return pred_labels, prob_logits[:, 1]
         
 class KGBased(nn.Module):
     
@@ -203,12 +203,14 @@ class KGBased(nn.Module):
         prob_logits_2 = self.classifier_kg(kgs)
         prob_logits = torch.softmax((prob_logits_1 + prob_logits_2), dim = 1)
         pred_labels = torch.argmax(prob_logits, dim = 1)
+        # print(prob_logits.shape)
+        # print(pred_labels.shape)
 
         if labels is not None:
             loss = self.loss_func(prob_logits, labels)
             return pred_labels, loss
         else:
-            return pred_labels
+            return pred_labels, prob_logits[:, 1]   #只返回阳性的概率分数
         
 class ImgwithKG(nn.Module):
     
@@ -267,4 +269,4 @@ class ImgwithKG(nn.Module):
             loss = self.loss_func(prob_logits, labels)
             return pred_labels, loss
         else:
-            return pred_labels
+            return pred_labels, prob_logits[:, 1]

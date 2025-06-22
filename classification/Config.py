@@ -7,7 +7,7 @@ class config:
     labelfile = r'D:\BaiduNetdiskDownload\multimodal_breast_cancer\Image_list_new.csv'
     emr_path = r'D:\BaiduNetdiskDownload\multimodal_breast_cancer\EMR.csv'
     # load_model_path = r'D:\BaiduNetdiskDownload\multimodal_breast_cancer\_model\unimodal\pytorch_model_unimodal_univision_0607_2.bin'
-    load_model_path = r'D:\BaiduNetdiskDownload\multimodal_breast_cancer\_model\multimodal\pytorch_model_multimodal_imgwithkg_0617_1.bin'
+    load_model_path = r'D:\BaiduNetdiskDownload\multimodal_breast_cancer\_model\multimodal\pytorch_model_multimodal_kgbased_0607_3.bin'
     output_path = r'D:\BaiduNetdiskDownload\multimodal_breast_cancer\_model'
     all_data_path = r'./data/data.json'
 

@@ -25,14 +25,14 @@ class Univision(nn.Module):
 
     def forward(self, tensors, labels = None):
         features = tensors
-        prob_vector = self.classifier(features)
-        pred_labels = torch.argmax(prob_vector, dim = 1)
+        prob_logits = self.classifier(features)
+        pred_labels = torch.argmax(prob_logits, dim = 1)
 
         if labels is not None:  #train、valid、test
-            loss = self.loss_func(prob_vector, labels)
+            loss = self.loss_func(prob_logits, labels)
             return pred_labels, loss
         else:
-            return pred_labels  #predict
+            return pred_labels, prob_logits[:, 1]
 
 class Uniemr(nn.Module):
 
@@ -62,7 +62,7 @@ class Uniemr(nn.Module):
             loss = self.loss_func(prob_logits, labels)
             return pred_labels, loss
         else:
-            return pred_labels
+            return pred_labels, prob_logits[:, 1]
 
 class Univision_sa(nn.Module):  #效果非常差   毕竟不是序列数据
     
@@ -100,4 +100,4 @@ class Univision_sa(nn.Module):  #效果非常差   毕竟不是序列数据
             loss = self.loss_func(prob_logits, labels)
             return pred_labels, loss
         else:
-            return pred_labels
+            return pred_labels, prob_logits[:, 1]

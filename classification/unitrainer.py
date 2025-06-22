@@ -1,6 +1,7 @@
 import torch
 import torch.optim as optim
 from tqdm import tqdm
+from utils.common import roc_draw
 
 class Trainer():
     def __init__(self, config, processor, model, device=torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')):
@@ -58,17 +59,19 @@ class Trainer():
 
         self.model.eval()
         test_loss = 0
-        true_labels, pred_labels = [], []
+        true_labels, pred_labels, pred_scores = [], [], []
 
         for batch in tqdm(test_loader, desc='----- [Predicting] '):
             tensors, labels = batch
             tensors, labels = tensors.to(self.device), labels.to(self.device)
-            pred = self.model(tensors)
+            pred, scores = self.model(tensors)
 
 
             true_labels.extend(labels.tolist())
             pred_labels.extend(pred.tolist())
+            pred_scores.extend(scores.tolist())
 
         # return [(guid, label) for guid, label in zip(pred_guids, pred_labels)]
         metrics, report_dict = self.processor.metric(true_labels, pred_labels)
+        roc_draw(true_labels, pred_scores, self.config.output_path + '/roc_curve.jpg')
         return metrics, report_dict
