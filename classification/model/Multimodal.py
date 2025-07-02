@@ -89,6 +89,14 @@ class Bicrossmodel(nn.Module):
             nn.Linear(config.output_hidden_dimension, config.num_labels)
         )
 
+        self.classifier_new = nn.Sequential(
+            nn.Dropout(config.fuse_dropout),
+            nn.Linear(512, 256),
+            nn.ReLU(inplace = True),
+            nn.Dropout(config.fuse_dropout),
+            nn.Linear(256, config.num_labels)
+        )
+
         self.loss_func = nn.CrossEntropyLoss()
         
     def forward(self, tensors, emrs, kgs, labels = None):
@@ -102,13 +110,16 @@ class Bicrossmodel(nn.Module):
 
         # focused_img, _ = self.fuse_attention(aligned_emr, aligned_img, aligned_img)
         # focused_emr, _ = self.fuse_attention(aligned_img, aligned_emr, aligned_emr) #参数共享
-
+        '''
         focused_img, _ = self.fuse_attention_img(aligned_emr, aligned_img, aligned_img)
         focused_emr, _ = self.fuse_attention_emr(aligned_img, aligned_emr, aligned_emr) 
 
         fused_feature = torch.cat([focused_img, focused_emr], dim = -1)
 
         prob_logits = self.classifier(fused_feature)
+        '''
+        focused_emr, _ = self.fuse_attention_emr(aligned_img, aligned_emr, aligned_emr)
+        prob_logits = self.classifier_new(focused_emr)
         pred_labels = torch.argmax(prob_logits, dim = 1)
 
         if labels is not None:
@@ -175,6 +186,15 @@ class KGBased(nn.Module):
             nn.Softmax(dim = 1)
         )
 
+        self.classifier_new = nn.Sequential(
+            nn.Dropout(config.fuse_dropout),
+            nn.Linear(512, 256),
+            nn.ReLU(inplace = True),
+            nn.Dropout(config.fuse_dropout),
+            nn.Linear(256, config.num_labels),
+            nn.Softmax(dim = 1)
+        )
+
         self.classifier_kg = nn.Sequential(
             nn.Dropout(0.3),
             nn.Linear(512, 256),
@@ -193,18 +213,24 @@ class KGBased(nn.Module):
         aligned_img = self.modality_proj_img(tensors)
         aligned_emr = self.modality_proj_emr(emrs)
 
+        '''
         focused_img, _ = self.fuse_attention(aligned_emr, aligned_img, aligned_img)
         focused_emr, _ = self.fuse_attention(aligned_img, aligned_emr, aligned_emr)
 
         fused_feature = torch.cat([focused_img, focused_emr], dim = -1)
-        # torch.dot()
+
 
         prob_logits_1 = self.classifier(fused_feature)
         prob_logits_2 = self.classifier_kg(kgs)
         prob_logits = torch.softmax((prob_logits_1 + prob_logits_2), dim = 1)
+        '''
+        focused_img, _ = self.fuse_attention(aligned_emr, aligned_img, aligned_img)
+        prob_logits_1 = self.classifier_new(focused_img)
+        prob_logits_2 = self.classifier_kg(kgs)
+        prob_logits = torch.softmax((prob_logits_1 + prob_logits_2), dim = 1)
+
         pred_labels = torch.argmax(prob_logits, dim = 1)
-        # print(prob_logits.shape)
-        # print(pred_labels.shape)
+        
 
         if labels is not None:
             loss = self.loss_func(prob_logits, labels)
@@ -257,12 +283,19 @@ class ImgwithKG(nn.Module):
         
         aligned_img = self.modality_proj_img(tensors)
 
+
+        '''
         focused_img, _ = self.fuse_attention_img(kgs, aligned_img, aligned_img)
         focused_kg, _ = self.fuse_attention_kg(aligned_img, kgs, kgs)
         
         fused_feature = torch.cat([focused_img, focused_kg], dim = -1)
 
         prob_logits = self.classifier_1(fused_feature)
+        '''
+
+        focused_img, _ = self.fuse_attention_img(kgs, aligned_img, aligned_img)
+        prob_logits = self.classifier(focused_img)
+
         pred_labels = torch.argmax(prob_logits, dim = 1)
 
         if labels is not None:

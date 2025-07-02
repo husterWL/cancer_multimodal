@@ -114,7 +114,38 @@ def split_dataset(data, train_ratio, valid_ratio, test_ratio):   #分割数据�
     
     return train, valid, test
 
+def read_kg(labelfile, tensor_path):
 
+    kg_list = []
+    id_list = []
+    df_label = pd.read_csv(labelfile)
+    kg_embeddings = pickle.load(open('./data/patient_embeddings.pkl', 'rb'))
+    kg_zero = np.zeros(512, np.float32)
+
+
+    for root, dirs, files in os.walk(tensor_path):
+        for file in files:
+            name = re.match(r'^[^\.]+', file).group(0)  #benign_S0000004_1
+            name1 = name.split('_')[1]  #S0000004
+            name2 = name.split('_')[2]  
+            if df_label.loc[df_label['slide_id'] == name, 'label'].values == 'normal_tissue':
+                label = 'benign'
+
+            else:
+                label = 'malignant'
+
+            tensor = torch.load(os.path.join(root, file))
+
+            if name1 in kg_embeddings:
+                kg = kg_embeddings[name1][0]
+            else:
+                kg = kg_zero
+
+            for i in range(len(tensor)):
+                id = '_'.join([name1, name2, str(i + 1)])
+                case = {'id': id, 'tensor': torch.FloatTensor(kg), 'label': label}
+                kg_list.append(case)
+    return kg_list
 
 def read_tensor_emr(labelfile, tensor_path, emr_path):
 

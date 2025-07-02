@@ -6,9 +6,10 @@ class config:
     tensor_path = r'D:\BaiduNetdiskDownload\multimodal_breast_cancer\Features_directory\pt_files'
     labelfile = r'D:\BaiduNetdiskDownload\multimodal_breast_cancer\Image_list_new.csv'
     emr_path = r'D:\BaiduNetdiskDownload\multimodal_breast_cancer\EMR.csv'
-    # load_model_path = r'D:\BaiduNetdiskDownload\multimodal_breast_cancer\_model\unimodal\pytorch_model_unimodal_univision_0607_2.bin'
-    load_model_path = r'D:\BaiduNetdiskDownload\multimodal_breast_cancer\_model\multimodal\pytorch_model_multimodal_kgbased_0607_3.bin'
-    output_path = r'D:\BaiduNetdiskDownload\multimodal_breast_cancer\_model'
+    # load_model_path = r'D:\BaiduNetdiskDownload\multimodal_breast_cancer\_model_new\unimodal\pytorch_model_multimodal_bicrossmodel_0702_1.bin'
+    load_model_path = r'D:\BaiduNetdiskDownload\multimodal_breast_cancer\_model_new\multimodal\pytorch_model_multimodal_bicrossmodel_0702_1.bin'
+    # output_path = r'D:\BaiduNetdiskDownload\multimodal_breast_cancer\_model'
+    output_path = r'D:\BaiduNetdiskDownload\multimodal_breast_cancer\_model_new'
     all_data_path = r'./data/data.json'
 
 
@@ -42,7 +43,7 @@ class config:
     # dataloader parameters
     train_params = {'batch_size': 16, 'shuffle': True, 'num_workers': 2}
     val_params = {'batch_size': 16, 'shuffle': False, 'num_workers': 2}
-    test_params =  {'batch_size': 8, 'shuffle': False, 'num_workers': 2}
+    test_params =  {'batch_size': 2, 'shuffle': False, 'num_workers': 2}
     
     #EMR
     EMR_FEATURES = ['Patient ID', 

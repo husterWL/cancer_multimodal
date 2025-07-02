@@ -64,7 +64,34 @@ class Uniemr(nn.Module):
         else:
             return pred_labels, prob_logits[:, 1]
 
-class Univision_sa(nn.Module):  #效果非常差   毕竟不是序列数据
+class Unikg(nn.Module):
+
+    def __init__(self, config):
+        super(Unikg, self).__init__()
+
+        self.classifier = nn.Sequential(
+            nn.Dropout(config.first_dropout),
+            nn.Linear(512, 256),
+            nn.Tanh(),
+            nn.Dropout(config.last_dropout),
+            nn.Linear(256, config.num_labels),
+            # nn.Softmax(dim = 1)
+        )
+
+        self.loss_func = nn.CrossEntropyLoss()
+
+    def forward(self, kgs, labels = None):
+        
+        prob_logits = self.classifier(kgs)
+        pred_labels = torch.argmax(prob_logits, dim = 1)
+
+        if labels is not None:
+            loss = self.loss_func(prob_logits, labels)
+            return pred_labels, loss
+        else:
+            return pred_labels, prob_logits[:, 1]
+
+class Univision_sa(nn.Module):
     
     def __init__(self, config):
         super(Univision_sa, self).__init__()

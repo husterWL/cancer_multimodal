@@ -5,7 +5,7 @@ sys.path.append('./utils')
 import torch
 import argparse
 from Config import config
-from utils.data_read import read_tensor, split_dataset, read_tensor_emr, read_emr
+from utils.data_read import read_tensor, read_tensor_emr, read_emr, read_kg
 from utils.common import save_model, loss_draw, acc_draw, other_draw, earlystop_draw
 from utils.dataprocess import Uni_processor, Processor
 from unitrainer import Trainer
@@ -18,11 +18,11 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--do_train', action = 'store_true', help = '训练模型')
 parser.add_argument('--lr', default = 1e-4, help = '设置学习率', type = float)
 parser.add_argument('--weight_decay', default = 1e-4, help = '设置权重衰减', type = float)
-parser.add_argument('--epoch', default = 10, help = '设置训练轮数', type = int)
+parser.add_argument('--epoch', default = 100, help = '设置训练轮数', type = int)
 parser.add_argument('--do_test', action = 'store_true', help = '预测测试集数据')
 parser.add_argument('--load_model_path', default = None, help = '已经训练好的模型路径', type = str)
 parser.add_argument('--model_type', default = 'multimodal', action = 'store', help = '是否多模态融合', type = str)
-parser.add_argument('--fusion_type', default = 'KGBased', action = 'store', help = '多模态融合方式', type = str)
+parser.add_argument('--fusion_type', default = 'Bicrossmodel', action = 'store', help = '多模态融合方式', type = str)
 
 args = parser.parse_args()
 config.learning_rate = args.lr
@@ -43,6 +43,8 @@ if config.model_type == 'unimodal':
         from model.Unimodal import Univision_sa as unimodel
     elif config.fusion_type == 'Uniemr':
         from model.Unimodal import Uniemr as unimodel
+    elif config.fusion_type == 'Unikg':
+        from model.Unimodal import Unikg as unimodel
     model = unimodel(config)
     trainer = Trainer(config, processor, model, device)
 elif config.model_type == 'multimodal':
@@ -65,9 +67,12 @@ def train():
     if not config.model_type == 'unimodal':
         data = read_tensor_emr(config.labelfile, config.tensor_path, config.emr_path)
     
-    else:
+    elif config.fusion_type == 'Univision' or config.fusion_type == 'Univision_sa':
         data = read_tensor(config.labelfile, config.tensor_path)
-        # data = read_emr(config.labelfile, config.tensor_path, config.emr_path)
+    elif config.fusion_type == 'Uniemr':
+        data = read_emr(config.labelfile, config.tensor_path, config.emr_path)
+    else:
+        data = read_kg(config.labelfile, config.tensor_path)
         
     train_data = []
     val_data = []
@@ -81,12 +86,7 @@ def train():
             train_data.append(lookup_data[line.strip('\n')])
     with open('./data/exclusion_valid_id.txt', 'r') as f:
         for line in f.readlines():
-            val_data.append(lookup_data[line.strip('\n')])
-
-    # else:
-    #     data = read_tensor(config.labelfile, config.tensor_path)
-        # train_data, val_data, _ = split_dataset(data, config.train_ratio, config.valid_ratio, config.test_ratio)
-    
+            val_data.append(lookup_data[line.strip('\n')])    
 
     
     train_loader = processor(train_data, config.train_params)
@@ -150,18 +150,39 @@ def train():
 
 def test():
 
+    test_data = []
+
     if not config.model_type == 'unimodal':
         data = read_tensor_emr(config.labelfile, config.tensor_path, config.emr_path)
-    
-    else:
+        lookup_data = {dic['id']: dic for dic in data}
+        with open('./data/exclusion_test_id.txt', 'r') as f:
+            for line in f.readlines():
+                test_data.append(lookup_data[line.strip('\n')])
+    elif config.fusion_type == 'Univision' or config.fusion_type == 'Univision_sa':
         data = read_tensor(config.labelfile, config.tensor_path)
-        # data = read_emr(config.labelfile, config.tensor_path, config.emr_path)
+        lookup_data = {dic['id']: dic for dic in data}
+        with open('./data/exclusion_test_id.txt', 'r') as f:
+            for line in f.readlines():
+                test_data.append(lookup_data[line.strip('\n')])
+    elif config.fusion_type == 'Uniemr':
+        data = read_emr(config.labelfile, config.tensor_path, config.emr_path)
+        lookup_data = {dic['id']: dic for dic in data}
+        with open('./data/exclusiondata.txt', 'r') as f:
+            for line in f.readlines():
+                id = line.strip('\n') + '_1_1'
+                test_data.append(lookup_data[id])
+    else:
+        data = read_kg(config.labelfile, config.tensor_path)
+        lookup_data = {dic['id']: dic for dic in data}
+        with open('./data/exclusiondata.txt', 'r') as f:
+            for line in f.readlines():
+                if line.strip('\n') + '_2_1' in lookup_data:
+                    id = line.strip('\n') + '_2_1'
+                elif line.strip('\n') + '_1_1' in lookup_data:
+                    id = line.strip('\n') + '_1_1'
+                test_data.append(lookup_data[id])
 
-    test_data = []
-    lookup_data = {dic['id']: dic for dic in data}
-    with open('./data/exclusion_test_id.txt', 'r') as f:
-        for line in f.readlines():
-            test_data.append(lookup_data[line.strip('\n')])
+
 
     test_loader = processor(test_data, config.test_params)
 
