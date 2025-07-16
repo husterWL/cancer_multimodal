@@ -138,30 +138,11 @@ def roc_draw(true_labels, pred_scores, dirc):
     fpr, tpr, thresholds = roc_curve(true_labels, pred_scores)
     roc_auc = auc(fpr, tpr)
 
-    dense_thresholds = np.linspace(0, 1, 1000)  # 1000个阈值点
-    tpr_dense = []
-    fpr_dense = []
-    true_tensor = torch.tensor(true_labels)
-    pred_tensor = torch.tensor(pred_scores)
-    for thresh in dense_thresholds:
-        preds = (pred_tensor >= thresh).float()
-        tp = ((preds == 1) & (true_tensor == 1)).sum().item()
-        fp = ((preds == 1) & (true_tensor == 0)).sum().item()
-        tn = ((preds == 0) & (true_tensor == 0)).sum().item()
-        fn = ((preds == 0) & (true_tensor == 1)).sum().item()
-        
-        tpr_val = tp / (tp + fn) if (tp + fn) > 0 else 0
-        fpr_val = fp / (fp + tn) if (fp + tn) > 0 else 0
-        
-        tpr_dense.append(tpr_val)
-        fpr_dense.append(fpr_val)
-    dense_auc = auc(fpr_dense, tpr_dense)
     # 绘制ROC曲线
     plt.figure()
     plt.plot(fpr, tpr, color='darkorange', lw=2, 
             label=f'ROC curve (AUC = {roc_auc:.2f})')
-    plt.plot(fpr_dense, tpr_dense, color='red', lw=1.5, 
-             label=f'密集曲线 (AUC = {dense_auc:.2f})')
+
     plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
     plt.xlim([0.0, 1.0])
     plt.ylim([0.0, 1.05])

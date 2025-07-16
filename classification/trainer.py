@@ -71,19 +71,20 @@ class multitrainer():            #训练器
         self.model.eval()   #设置为评估模式
         pred_guids, pred_labels, pred_scores, true_labels = [], [], [], []
 
-        for batch in tqdm(test_loader, desc='----- [Predicting] '):
-            guids, imgs, ehrs, kgs, labels = batch
-            imgs, ehrs, kgs = imgs.to(self.device), ehrs.to(self.device), kgs.to(self.device)
-            pred, scores = self.model(imgs, ehrs, kgs)
+        with torch.no_grad():
+            for batch in tqdm(test_loader, desc='----- [Predicting] '):
+                guids, imgs, ehrs, kgs, labels = batch
+                imgs, ehrs, kgs = imgs.to(self.device), ehrs.to(self.device), kgs.to(self.device)
+                pred, scores = self.model(imgs, ehrs, kgs)
 
-            # guids, imgs, ehrs, labels = batch
-            # imgs, ehrs = imgs.to(self.device), ehrs.to(self.device)
-            # pred, loss = self.model(imgs, ehrs)
+                # guids, imgs, ehrs, labels = batch
+                # imgs, ehrs = imgs.to(self.device), ehrs.to(self.device)
+                # pred, loss = self.model(imgs, ehrs)
 
-            # pred_guids.extend(guids)
-            true_labels.extend(labels.tolist())
-            pred_labels.extend(pred.tolist())
-            pred_scores.extend(scores.tolist())
+                # pred_guids.extend(guids)
+                true_labels.extend(labels.tolist())
+                pred_labels.extend(pred.tolist())
+                pred_scores.extend(scores.tolist())
 
         # return [(guid, label) for guid, label in zip(pred_guids, pred_labels)]
         metrics, report_dict = self.processor.metric(true_labels, pred_labels)

@@ -61,15 +61,16 @@ class Trainer():
         test_loss = 0
         true_labels, pred_labels, pred_scores = [], [], []
 
-        for batch in tqdm(test_loader, desc='----- [Predicting] '):
-            tensors, labels = batch
-            tensors, labels = tensors.to(self.device), labels.to(self.device)
-            pred, scores = self.model(tensors)
+        with torch.no_grad():
+            for batch in tqdm(test_loader, desc='----- [Predicting] '):
+                tensors, labels = batch
+                tensors, labels = tensors.to(self.device), labels.to(self.device)
+                pred, scores = self.model(tensors)
 
 
-            true_labels.extend(labels.tolist())
-            pred_labels.extend(pred.tolist())
-            pred_scores.extend(scores.tolist())
+                true_labels.extend(labels.tolist())
+                pred_labels.extend(pred.tolist())
+                pred_scores.extend(scores.tolist())
 
         # return [(guid, label) for guid, label in zip(pred_guids, pred_labels)]
         metrics, report_dict = self.processor.metric(true_labels, pred_labels)
