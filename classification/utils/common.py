@@ -129,6 +129,10 @@ def earlystop_draw(tloss_list, vloss_list, dirc):
 
 def roc_draw(true_labels, pred_scores, dirc):
 
+    font = {'style': 'Times New Roman'}
+    plt.rc('font', family = 'Times New Roman')
+
+
     if isinstance(true_labels, torch.Tensor):
         true_labels = true_labels.cpu().numpy()
     if isinstance(pred_scores, torch.Tensor):
@@ -140,15 +144,15 @@ def roc_draw(true_labels, pred_scores, dirc):
 
     # 绘制ROC曲线
     plt.figure()
-    plt.plot(fpr, tpr, color='darkorange', lw=2, 
-            label=f'ROC curve (AUC = {roc_auc:.2f})')
-
-    plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
-    plt.xlim([0.0, 1.0])
-    plt.ylim([0.0, 1.05])
+    plt.plot(fpr, tpr, color = 'darkorange', lw = 1.25, 
+            label = f'ROC curve (AUC = {roc_auc:.2f})')
+TTT  GG 
+    plt.plot([0, 1], [0, 1], color = 'navy', lw = 1, linestyle = '--')
+    plt.xlim([-0.05, 1.05])
+    plt.ylim([-0.05, 1.05])
     plt.xlabel('False Positive Rate')
     plt.ylabel('True Positive Rate')
     plt.title('Multimodal Classifier ROC Curve')
-    plt.legend(loc="lower right")
-    plt.savefig('multimodal_roc.png')
+    plt.legend(loc = 'lower right')
+    plt.savefig('multimodal_roc.svg', dpi = 600, bbox_inches = 'tight', format = 'svg')
     # plt.savefig(dirc)

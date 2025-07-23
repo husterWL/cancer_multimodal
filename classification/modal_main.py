@@ -21,8 +21,8 @@ parser.add_argument('--weight_decay', default = 1e-4, help = '设置权重衰减
 parser.add_argument('--epoch', default = 100, help = '设置训练轮数', type = int)
 parser.add_argument('--do_test', action = 'store_true', help = '预测测试集数据')
 parser.add_argument('--load_model_path', default = None, help = '已经训练好的模型路径', type = str)
-parser.add_argument('--model_type', default = 'unimodal', action = 'store', help = '是否多模态融合', type = str)
-parser.add_argument('--fusion_type', default = 'Univision', action = 'store', help = '多模态融合方式', type = str)
+parser.add_argument('--model_type', default = 'multimodal', action = 'store', help = '是否多模态融合', type = str)
+parser.add_argument('--fusion_type', default = 'Bicrossmodel', action = 'store', help = '多模态融合方式', type = str)
 
 args = parser.parse_args()
 config.learning_rate = args.lr
