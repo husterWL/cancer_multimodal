@@ -146,7 +146,7 @@ def roc_draw(true_labels, pred_scores, dirc):
     plt.figure()
     plt.plot(fpr, tpr, color = 'darkorange', lw = 1.25, 
             label = f'ROC curve (AUC = {roc_auc:.2f})')
-TTT  GG 
+
     plt.plot([0, 1], [0, 1], color = 'navy', lw = 1, linestyle = '--')
     plt.xlim([-0.05, 1.05])
     plt.ylim([-0.05, 1.05])
