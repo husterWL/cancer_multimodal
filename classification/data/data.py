@@ -80,8 +80,8 @@ for id in filenames:
 path1 = './classification/data/entity_embeddings.npy'
 path2 = './classification/data/patient_embeddings.pkl'
 
-# load_array1 = np.load(path1, allow_pickle = True)
-# print(load_array1)
+load_array1 = np.load(path1, allow_pickle = True)
+print(load_array1)
 
 load_array2 = pickle.load(open(path2, 'rb'))
 print(load_array2['S0000004'])

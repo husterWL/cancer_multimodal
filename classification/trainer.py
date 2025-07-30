@@ -2,6 +2,7 @@ import torch
 import torch.optim as optim
 from tqdm import tqdm
 from utils.common import roc_draw
+import numpy as np
 
 class multitrainer():            #训练器
 
@@ -85,6 +86,10 @@ class multitrainer():            #训练器
                 true_labels.extend(labels.tolist())
                 pred_labels.extend(pred.tolist())
                 pred_scores.extend(scores.tolist())
+
+        #保存true_labels、pred_scores以便画图
+        np.save('true_labels.npy', np.array(true_labels))
+        np.save('pred_scores.npy', np.array(pred_scores))
 
         # return [(guid, label) for guid, label in zip(pred_guids, pred_labels)]
         metrics, report_dict = self.processor.metric(true_labels, pred_labels)
