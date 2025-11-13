@@ -3,21 +3,23 @@ import os
 class config:
 
     #some paths
-    tensor_path = r'D:\BaiduNetdiskDownload\multimodal_breast_cancer\Features_directory\pt_files'
-    labelfile = r'D:\BaiduNetdiskDownload\multimodal_breast_cancer\Image_list_new.csv'
-    emr_path = r'D:\BaiduNetdiskDownload\multimodal_breast_cancer\EMR.csv'
-    # load_model_path = r'D:\BaiduNetdiskDownload\multimodal_breast_cancer\_model_new\unimodal\pytorch_model_multimodal_bicrossmodel_0702_1.bin'
-    load_model_path = r'D:\BaiduNetdiskDownload\multimodal_breast_cancer\_model_new\multimodal\pytorch_model_multimodal_bicrossmodel_0702_1.bin'
-    # output_path = r'D:\BaiduNetdiskDownload\multimodal_breast_cancer\_model'
-    output_path = r'D:\BaiduNetdiskDownload\multimodal_breast_cancer\_model_new'
-    all_data_path = r'./data/data.json'
+    tensor_path = '/mnt/Data/breast_cancer/pt_files'
+    labelfile = '/mnt/Data/breast_cancer/Image_list_new.csv'
+    emr_path = '/mnt/Data/breast_cancer/EMR.csv'
+    img_path = '/mnt/Data/breast_cancer/patches'
+    coords_path = '/mnt/Data/breast_cancer/h5_files'
+    load_model_path = '/mnt/breast_cancer_multimodal/model/unimodal/pytorch_model_unimodal_univision_1111_1.bin'
+    # load_model_path = '/mnt/breast_cancer_multimodal/model/multimodal/pytorch_model_multimodal_bicross_1111_1.bin'
+    # load_model_path = '/mnt/breast_cancer_multimodal/model/checkpoint.pt'
+    output_path = '/mnt/breast_cancer_multimodal/model'
 
 
     #some parameters
     patch_size = 24
     epoch = 10
-    learning_rate = 1e-4
-    weight_decay = 1e-4
+    learning_rate = 5e-4
+    scheduler_gamma = 0.95
+    weight_decay = 1e-3
     train_ratio = 0.8
     valid_ratio = 0.1
     test_ratio = 0.1
@@ -27,23 +29,27 @@ class config:
     first_dropout = 0.4
     middle_hidden_dimension = 1024
     output_hidden_dimension = 512
-    last_dropout = 0.2
+    last_dropout = 0.3
     num_labels = 2
 
     #fusion parameters
     img_dimension = 1024
     emr_dimension = 106
-    model_type = 'unimodal'
+    model_type = 'multimodel'
     fusion_type = 'Bicrossmodel'
     fusion_hidden_dimension = 512
     num_heads = 8
     fuse_dropout = 0.3
-    attention_dropout = 0.3
+    attention_dropout = 0.2
+
+    #attention visualization parameters
+    
+
 
     # dataloader parameters
     train_params = {'batch_size': 16, 'shuffle': True, 'num_workers': 2}
     val_params = {'batch_size': 16, 'shuffle': False, 'num_workers': 2}
-    test_params =  {'batch_size': 2, 'shuffle': False, 'num_workers': 2}
+    test_params =  {'batch_size': 8, 'shuffle': False, 'num_workers': 2}
     
     #EMR
     EMR_FEATURES = ['Patient ID', 

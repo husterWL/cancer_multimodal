@@ -15,7 +15,13 @@ class multitrainer():            #训练器
      
         parameters = [param for name, param in model.named_parameters()]
         self.optimizer = optim.AdamW(params = parameters, lr = config.learning_rate, weight_decay = config.weight_decay)
+        # self.optimizer = optim.AdamW(params = parameters, lr = config.learning_rate)
+        
 
+        self.scheduler = optim.lr_scheduler.ExponentialLR(optimizer = self.optimizer, gamma = config.scheduler_gamma)
+
+    def lr_decay(self):
+        self.scheduler.step()
 
     def train(self, train_loader):
 
@@ -23,15 +29,18 @@ class multitrainer():            #训练器
         loss_list = []
         true_labels, pred_labels = [], []
 
+        # l1_lambda = self.config.l1_lambda if hasattr(self.config, 'l1_lambda') else 0.0001
+
         for batch in tqdm(train_loader, desc = '----- [Training] '):
             guids, imgs, ehrs, kgs, labels = batch
             imgs, ehrs, kgs, labels = imgs.to(self.device), ehrs.to(self.device), kgs.to(self.device), labels.to(self.device)
             pred, loss = self.model(imgs, ehrs, kgs, labels = labels)
-
-            # guids, imgs, ehrs, labels = batch
-            # imgs, ehrs, labels = imgs.to(self.device), ehrs.to(self.device), labels.to(self.device)
-            # pred, loss = self.model(imgs, ehrs, labels = labels)
             
+            # L1 regularization
+            # if l1_lambda > 0:
+            #     l1_norm = sum(p.abs().sum() for p in self.model.parameters())
+            #     loss = loss + l1_lambda * l1_norm
+
             # metric
             loss_list.append(loss.item())
             true_labels.extend(labels.tolist())
@@ -40,6 +49,7 @@ class multitrainer():            #训练器
             self.optimizer.zero_grad()
             loss.backward()
             self.optimizer.step()
+            # self.scheduler.step()
 
         train_loss = round(sum(loss_list) / len(loss_list), 5)
         return train_loss, loss_list  
@@ -72,27 +82,25 @@ class multitrainer():            #训练器
         self.model.eval()   #设置为评估模式
         pred_guids, pred_labels, pred_scores, true_labels = [], [], [], []
 
-        with torch.no_grad():
-            for batch in tqdm(test_loader, desc='----- [Predicting] '):
-                guids, imgs, ehrs, kgs, labels = batch
-                imgs, ehrs, kgs = imgs.to(self.device), ehrs.to(self.device), kgs.to(self.device)
-                pred, scores = self.model(imgs, ehrs, kgs)
+        for batch in tqdm(test_loader, desc='----- [Predicting] '):
+            guids, imgs, ehrs, kgs, labels = batch
+            imgs, ehrs, kgs = imgs.to(self.device), ehrs.to(self.device), kgs.to(self.device)
+            pred, scores = self.model(imgs, ehrs, kgs)
 
-                # guids, imgs, ehrs, labels = batch
-                # imgs, ehrs = imgs.to(self.device), ehrs.to(self.device)
-                # pred, loss = self.model(imgs, ehrs)
+            # guids, imgs, ehrs, labels = batch
+            # imgs, ehrs = imgs.to(self.device), ehrs.to(self.device)
+            # pred, loss = self.model(imgs, ehrs)
 
-                # pred_guids.extend(guids)
-                true_labels.extend(labels.tolist())
-                pred_labels.extend(pred.tolist())
-                pred_scores.extend(scores.tolist())
+            # pred_guids.extend(guids)
+            true_labels.extend(labels.tolist())
+            pred_labels.extend(pred.tolist())
+            pred_scores.extend(scores.tolist())
 
-        #保存true_labels、pred_scores以便画图
-        np.save('true_labels.npy', np.array(true_labels))
-        np.save('pred_scores.npy', np.array(pred_scores))
+        # np.save(self.config.output_path + '/true_labels_multimodal_imgkg_0728_7.npy', np.array(true_labels))
+        # np.save(self.config.output_path + '/pred_scores_multimodal_imgkg_0728_7.npy', np.array(pred_scores))
 
         # return [(guid, label) for guid, label in zip(pred_guids, pred_labels)]
         metrics, report_dict = self.processor.metric(true_labels, pred_labels)
-        roc_draw(true_labels, pred_scores, self.config.output_path + '/roc_curve.jpg')
+        # roc_draw(true_labels, pred_scores, self.config.output_path + '/' + self.config.model_type + '/roc_curve.png')
 
         return metrics, report_dict

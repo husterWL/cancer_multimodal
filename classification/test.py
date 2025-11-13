@@ -14,9 +14,3 @@ with open('./classification/data/train_id.txt', 'r') as f:
 with open('./classification/data/train_id.txt', 'r') as f:
     for line in f.readlines():
         print('1')
-
-class trainer():
-    def __init__(self):
-        
-        scheduler = 1
-

@@ -1,28 +1,28 @@
 import os
 import sys
 sys.path.append('./utils')
-# print(os.getcwd())
 import torch
 import argparse
 from Config import config
-from utils.data_read import read_tensor, read_tensor_emr, read_emr, read_kg
+from utils.data_read import read_tensor, read_tensor_emr, read_emr, read_kg, read_img_emr, read_img
 from utils.common import save_model, loss_draw, acc_draw, other_draw, earlystop_draw
 from utils.dataprocess import Uni_processor, Processor
 from unitrainer import Trainer
 from trainer import multitrainer
 from early_stopping_pytorch import EarlyStopping
-
+from heatmaps import GradCAM
 
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--do_train', action = 'store_true', help = '训练模型')
 parser.add_argument('--lr', default = 1e-4, help = '设置学习率', type = float)
 parser.add_argument('--weight_decay', default = 1e-4, help = '设置权重衰减', type = float)
-parser.add_argument('--epoch', default = 100, help = '设置训练轮数', type = int)
+parser.add_argument('--epoch', default = 200, help = '设置训练轮数', type = int)
 parser.add_argument('--do_test', action = 'store_true', help = '预测测试集数据')
+parser.add_argument('--do_heat', action = 'store_true', help = '生成热图')
 parser.add_argument('--load_model_path', default = None, help = '已经训练好的模型路径', type = str)
-parser.add_argument('--model_type', default = 'multimodal', action = 'store', help = '是否多模态融合', type = str)
-parser.add_argument('--fusion_type', default = 'Bicrossmodel', action = 'store', help = '多模态融合方式', type = str)
+parser.add_argument('--model_type', default = 'unimodal', action = 'store', help = '是否多模态融合', type = str)
+parser.add_argument('--fusion_type', default = 'Univision', action = 'store', help = '多模态融合方式', type = str)
 
 args = parser.parse_args()
 config.learning_rate = args.lr
@@ -60,19 +60,36 @@ elif config.model_type == 'multimodal':
     model = FuseModel(config)
     trainer = multitrainer(config, processor, model, device)
 
+gradcam = GradCAM(model)
+
+if not config.model_type == 'unimodal':
+    data = read_img_emr(config.labelfile, config.coords_path, config.img_path, config.emr_path)
+
+elif config.fusion_type == 'Univision' or config.fusion_type == 'Univision_sa':
+    data = read_img(config.labelfile, config.coords_path, config.img_path)
+
+elif config.fusion_type == 'Uniemr':
+    data = read_emr(config.labelfile, config.tensor_path, config.emr_path)
+    
+else:
+    data = read_kg(config.labelfile, config.tensor_path)
 
 
 def train():
 
-    if not config.model_type == 'unimodal':
-        data = read_tensor_emr(config.labelfile, config.tensor_path, config.emr_path)
+    # if not config.model_type == 'unimodal':
+    #     # data = read_tensor_emr(config.labelfile, config.tensor_path, config.emr_path)
+    #     data = read_img_emr(config.labelfile, config.coords_path, config.img_path, config.emr_path)
+
+    # elif config.fusion_type == 'Univision' or config.fusion_type == 'Univision_sa':
+    #     # data = read_tensor(config.labelfile, config.tensor_path)
+    #     data = read_img(config.labelfile, config.coords_path, config.img_path)
+
+    # elif config.fusion_type == 'Uniemr':
+    #     data = read_emr(config.labelfile, config.tensor_path, config.emr_path)
     
-    elif config.fusion_type == 'Univision' or config.fusion_type == 'Univision_sa':
-        data = read_tensor(config.labelfile, config.tensor_path)
-    elif config.fusion_type == 'Uniemr':
-        data = read_emr(config.labelfile, config.tensor_path, config.emr_path)
-    else:
-        data = read_kg(config.labelfile, config.tensor_path)
+    # else:
+    #     data = read_kg(config.labelfile, config.tensor_path)
         
     train_data = []
     val_data = []
@@ -86,7 +103,7 @@ def train():
             train_data.append(lookup_data[line.strip('\n')])
     with open('./data/exclusion_valid_id.txt', 'r') as f:
         for line in f.readlines():
-            val_data.append(lookup_data[line.strip('\n')])    
+            val_data.append(lookup_data[line.strip('\n')])
 
     
     train_loader = processor(train_data, config.train_params)
@@ -103,7 +120,7 @@ def train():
     Range = range(0, epoch)
     print('这是range的类型', type(Range))
 
-    early_stop = EarlyStopping(patience = config.patience, verbose = True, path = config.output_path + '\\checkpoint.pt')
+    early_stop = EarlyStopping(patience = config.patience, verbose = True, path = config.output_path + '/checkpoint.pt')
     
     for e in range(epoch):
         print('-' * 20 + ' ' + 'Epoch ' + str(e+1) + ' ' + '-' * 20)
@@ -137,6 +154,9 @@ def train():
             last_epoch = e + 1
             print(last_epoch)
             break
+        
+        #学习率衰减
+        trainer.lr_decay()
 
     #损失曲线
     loss_draw(tloss_list, vloss_list, range(0, last_epoch), os.path.join(config.output_path, 'loss_curve.jpg'))
@@ -151,29 +171,38 @@ def train():
 def test():
 
     test_data = []
+    lookup_data = {dic['id']: dic for dic in data}
 
     if not config.model_type == 'unimodal':
-        data = read_tensor_emr(config.labelfile, config.tensor_path, config.emr_path)
-        lookup_data = {dic['id']: dic for dic in data}
+        # data = read_tensor_emr(config.labelfile, config.tensor_path, config.emr_path)
+        # data = read_img_emr(config.labelfile, config.coords_path, config.img_path, config.emr_path)
+        # lookup_data = {dic['id']: dic for dic in data}
         with open('./data/exclusion_test_id.txt', 'r') as f:
             for line in f.readlines():
                 test_data.append(lookup_data[line.strip('\n')])
+
     elif config.fusion_type == 'Univision' or config.fusion_type == 'Univision_sa':
-        data = read_tensor(config.labelfile, config.tensor_path)
-        lookup_data = {dic['id']: dic for dic in data}
+        # data = read_tensor(config.labelfile, config.tensor_path)
+        # data = read_img(config.labelfile, config.coords_path, config.img_path)
+        # lookup_data = {dic['id']: dic for dic in data}
         with open('./data/exclusion_test_id.txt', 'r') as f:
             for line in f.readlines():
                 test_data.append(lookup_data[line.strip('\n')])
+
     elif config.fusion_type == 'Uniemr':
-        data = read_emr(config.labelfile, config.tensor_path, config.emr_path)
-        lookup_data = {dic['id']: dic for dic in data}
+        # data = read_emr(config.labelfile, config.tensor_path, config.emr_path)
+        # lookup_data = {dic['id']: dic for dic in data}
         with open('./data/exclusiondata.txt', 'r') as f:
             for line in f.readlines():
-                id = line.strip('\n') + '_1_1'
+                if line.strip('\n') + '_2_1' in lookup_data:
+                    id = line.strip('\n') + '_2_1'
+                elif line.strip('\n') + '_1_1' in lookup_data:
+                    id = line.strip('\n') + '_1_1'
                 test_data.append(lookup_data[id])
+
     else:
-        data = read_kg(config.labelfile, config.tensor_path)
-        lookup_data = {dic['id']: dic for dic in data}
+        # data = read_kg(config.labelfile, config.tensor_path)
+        # lookup_data = {dic['id']: dic for dic in data}
         with open('./data/exclusiondata.txt', 'r') as f:
             for line in f.readlines():
                 if line.strip('\n') + '_2_1' in lookup_data:
@@ -187,11 +216,11 @@ def test():
     test_loader = processor(test_data, config.test_params)
 
     if config.load_model_path is not None:
-        model.load_state_dict(torch.load(config.load_model_path))   #只加载参数字典给model，即最前面的实例对象等价于：model.load_state_dict(torch.load(config.load_model_path),model)
+        model.load_state_dict(torch.load(config.load_model_path, weights_only = True))   #只加载参数字典给model，即最前面的实例对象等价于：model.load_state_dict(torch.load(config.load_model_path),model)
         '''
         我觉得应该是这句:
         '''
-        #trainer.model.load_state_dict(torch.load(config.load_model_path))
+        #trainer.model.load_state_dict(torch.load(config.load_model_path))      #思考：为什么要这样写，而不是直接给model赋值呢？
     
     tacc, report_dict = trainer.predict(test_loader)
     print('Test Acc: {}'.format(tacc))
@@ -201,6 +230,34 @@ def test():
           'recall:{}\n'.format(report_dict['weighted avg']['recall']),
           'f1-score:{}'.format(report_dict['weighted avg']['f1-score'])
         )
+    
+
+def heat_map():
+    pass
+
+    test_data = []
+    lookup_data = {dic['id']: dic for dic in data}
+
+    if config.fusion_type == 'Uniemr' or config.fusion_type == 'Unikg':
+        with open('./data/exclusiondata.txt', 'r') as f:
+            for line in f.readlines():
+                if line.strip('\n') + '_2_1' in lookup_data:
+                    id = line.strip('\n') + '_2_1'
+                elif line.strip('\n') + '_1_1' in lookup_data:
+                    id = line.strip('\n') + '_1_1'
+                test_data.append(lookup_data[id])
+    else:
+        with open('./data/exclusion_test_id.txt', 'r') as f:
+            for line in f.readlines():
+                test_data.append(lookup_data[line.strip('\n')])
+
+    test_loader = processor(test_data, config.test_params)
+    if config.load_model_path is not None:
+        model.load_state_dict(torch.load(config.load_model_path, weights_only = True))
+        # model.eval()
+        # print(model.resnet.model.layer3)
+    
+    gradcam.test_gradcam_on_single_image(test_loader)
     
 
 
@@ -215,3 +272,5 @@ if __name__ == '__main__':
             print('请输入已训练好模型的路径load_model_path或者选择添加do_train arg')
         else:
             test()
+    if args.do_heat:
+        heat_map()

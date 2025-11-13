@@ -4,9 +4,8 @@
 import torch
 import torch.nn as nn
 import torchvision.models as models
-
-# FCN = models.segmentation.fcn_resnet50(pretrained = True)
-
+from .Visionmodel import get_encoder
+import numpy as np
 
 class Univision(nn.Module):
 
@@ -21,18 +20,28 @@ class Univision(nn.Module):
             nn.Linear(config.output_hidden_dimension, config.num_labels),
             # nn.Softmax()
         )
+
+        self.resnet = get_encoder('resnet50_trunc')
+
         self.loss_func = nn.CrossEntropyLoss()
 
     def forward(self, tensors, labels = None):
-        features = tensors
+        
+        features = self.resnet(tensors)
+        # features = tensors
         prob_logits = self.classifier(features)
-        pred_labels = torch.argmax(prob_logits, dim = 1)
+        pred_labels = torch.argmax(prob_logits, dim = 1)        
+
+        #测试用
+        # features = features.cpu().numpy().astype(np.float32)    #RuntimeError: Can't call numpy() on Tensor that requires grad. Use tensor.detach().numpy() instead
 
         if labels is not None:  #train、valid、test
             loss = self.loss_func(prob_logits, labels)
             return pred_labels, loss
         else:
-            return pred_labels, prob_logits[:, 1]
+            # return pred_labels, prob_logits[:, 1]
+            return pred_labels, prob_logits
+
 
 class Uniemr(nn.Module):
 
@@ -62,7 +71,9 @@ class Uniemr(nn.Module):
             loss = self.loss_func(prob_logits, labels)
             return pred_labels, loss
         else:
-            return pred_labels, prob_logits[:, 1]
+            # return pred_labels, prob_logits[:, 1]
+            return pred_labels, prob_logits
+        
 
 class Unikg(nn.Module):
 
@@ -112,11 +123,13 @@ class Univision_sa(nn.Module):
             # nn.Softmax(dim = 1)
         )
 
+        self.resnet = get_encoder('resnet50_trunc')
         self.loss_func = nn.CrossEntropyLoss()
 
     def forward(self, tensors, labels = None):
         
         # print(tensors.shape) (16, 1024)
+        tensors = self.resnet(tensors)
         tensors = tensors.unsqueeze(1)
         sa_imgtensors, _ = self.selfattention(tensors, tensors, tensors)
         sa_imgtensors = sa_imgtensors.squeeze(1)

@@ -4,7 +4,7 @@
 import torch
 import torch.nn as nn
 import torchvision.models as models
-
+from .Visionmodel import get_encoder
 
 
 class Bicrossmodel(nn.Module):
@@ -97,6 +97,8 @@ class Bicrossmodel(nn.Module):
             nn.Linear(256, config.num_labels)
         )
 
+        self.resnet = get_encoder('resnet50_trunc')
+
         self.loss_func = nn.CrossEntropyLoss()
         
     def forward(self, tensors, emrs, kgs, labels = None):
@@ -104,22 +106,21 @@ class Bicrossmodel(nn.Module):
         # print('weight_dtype', self.modality_proj_img.weight.dtype, '\n')
         # print('weight_dtype', self.modality_proj_emr.weight.dtype, '\n')
         # print(tensors.dtype, emrs.dtype)
+        tensors = self.resnet(tensors)
 
         aligned_img = self.modality_proj_img(tensors)
         aligned_emr = self.modality_proj_emr(emrs)
 
         # focused_img, _ = self.fuse_attention(aligned_emr, aligned_img, aligned_img)
         # focused_emr, _ = self.fuse_attention(aligned_img, aligned_emr, aligned_emr) #参数共享
-        '''
-        focused_img, _ = self.fuse_attention_img(aligned_emr, aligned_img, aligned_img)
-        focused_emr, _ = self.fuse_attention_emr(aligned_img, aligned_emr, aligned_emr) 
 
-        fused_feature = torch.cat([focused_img, focused_emr], dim = -1)
-
-        prob_logits = self.classifier(fused_feature)
-        '''
-        focused_emr, _ = self.fuse_attention_emr(aligned_img, aligned_emr, aligned_emr)
-        prob_logits = self.classifier_new(focused_emr)
+        focused_img, _ = self.fuse_attention_emr(aligned_img, aligned_emr, aligned_emr)
+        advanced_img = focused_img + aligned_img
+        focused_emr, _ = self.fuse_attention_img(aligned_emr, aligned_img, aligned_img)
+        advanced_emr = focused_emr + aligned_emr
+        # fused_feature = torch.cat([advanced_img, advanced_emr], dim = -1)
+        fused_feature = advanced_img + advanced_emr
+        prob_logits = self.classifier_new(fused_feature)
         pred_labels = torch.argmax(prob_logits, dim = 1)
 
         if labels is not None:
@@ -145,10 +146,13 @@ class Concatmodel(nn.Module):
         self.modality_proj_img = nn.Linear(config.img_dimension, config.fusion_hidden_dimension)
         self.modality_proj_emr = nn.Linear(config.emr_dimension, config.fusion_hidden_dimension)
 
+        self.resnet = get_encoder('resnet50_trunc')
+
         self.loss_func = nn.CrossEntropyLoss()
     
     def forward(self, tensors, emrs, kgs, labels = None):
-
+        
+        tensors = self.resnet(tensors)
         aligned_img = self.modality_proj_img(tensors)
         aligned_emr = self.modality_proj_emr(emrs)
         fused_feature = torch.cat([aligned_img, aligned_emr], dim = -1)
@@ -199,16 +203,19 @@ class KGBased(nn.Module):
             nn.Dropout(0.3),
             nn.Linear(512, 256),
             nn.Tanh(),
-            # nn.ReLU(inplace = True),
-            nn.Dropout(0.4),
+            nn.Dropout(0.3),
             nn.Linear(256, config.num_labels),
             nn.LeakyReLU(0.01, inplace = True),
             nn.Softmax(dim = 1)
         )
 
+        self.resnet = get_encoder('resnet50_trunc')
+
         self.loss_func = nn.CrossEntropyLoss()
         
     def forward(self, tensors, emrs, kgs, labels = None):
+        
+        tensors = self.resnet(tensors)
 
         aligned_img = self.modality_proj_img(tensors)
         aligned_emr = self.modality_proj_emr(emrs)
@@ -224,9 +231,25 @@ class KGBased(nn.Module):
         prob_logits_2 = self.classifier_kg(kgs)
         prob_logits = torch.softmax((prob_logits_1 + prob_logits_2), dim = 1)
         '''
-        focused_img, _ = self.fuse_attention(aligned_emr, aligned_img, aligned_img)
-        prob_logits_1 = self.classifier_new(focused_img)
-        prob_logits_2 = self.classifier_kg(kgs)
+        # focused_img, _ = self.fuse_attention(aligned_img, aligned_emr, aligned_emr)
+        # focused_emr, _ = self.fuse_attention(aligned_emr, aligned_img, aligned_img)
+        # advanced_img = aligned_img + focused_img
+        # advanced_emr = aligned_emr + focused_emr
+        # fused_feature = torch.cat([advanced_img, advanced_emr], dim = -1)
+        
+        # prob_logits_1 = self.classifier(fused_feature)
+        # prob_logits_2 = self.classifier_kg(kgs)
+
+        focused_img, _ = self.fuse_attention(aligned_img, kgs, kgs)
+        focused_kgs, _ = self.fuse_attention(kgs, aligned_img, aligned_img)
+        advanced_img = aligned_img + focused_img
+        advanced_kgs = kgs + focused_kgs
+        fused_feature = torch.cat([advanced_img, advanced_kgs], dim = -1)
+        
+        prob_logits_1 = self.classifier(fused_feature)
+        prob_logits_2 = self.classifier_kg(aligned_emr)
+
+
         prob_logits = torch.softmax((prob_logits_1 + prob_logits_2), dim = 1)
 
         pred_labels = torch.argmax(prob_logits, dim = 1)
@@ -256,16 +279,32 @@ class ImgwithKG(nn.Module):
             batch_first = True,
             dropout = config.attention_dropout
             )
+        
+        self.fuse_attention = nn.MultiheadAttention(
+            embed_dim = config.fusion_hidden_dimension, 
+            num_heads = config.num_heads,
+            batch_first = True,
+            dropout = config.attention_dropout
+            )
 
         self.modality_proj_img = nn.Linear(config.img_dimension, config.fusion_hidden_dimension)
 
-        self.classifier = nn.Sequential(#重写
+        self.classifier = nn.Sequential(
+            nn.Dropout(0.3),
+            nn.Linear(512, 256),
+            nn.Tanh(),
+            nn.Dropout(0.3),
+            nn.Linear(256, config.num_labels),
+            nn.ReLU(inplace = True),
+        )
+
+        self.classifier_ = nn.Sequential(
             nn.Dropout(0.3),
             nn.Linear(512, 256),
             nn.Tanh(),
             nn.Dropout(0.4),
             nn.Linear(256, config.num_labels),
-            nn.LeakyReLU(0.01, inplace = True),
+            nn.ReLU(inplace = True),
         )
 
         self.classifier_1 = nn.Sequential(
@@ -277,24 +316,39 @@ class ImgwithKG(nn.Module):
             nn.LeakyReLU(0.01, inplace = True),
         )
 
+        self.resnet = get_encoder('resnet50_trunc')
+
         self.loss_func = nn.CrossEntropyLoss()
 
     def forward(self, tensors, emrs, kgs, labels = None):
         
+
+        tensors = self.resnet(tensors)
+
         aligned_img = self.modality_proj_img(tensors)
 
 
-        '''
-        focused_img, _ = self.fuse_attention_img(kgs, aligned_img, aligned_img)
-        focused_kg, _ = self.fuse_attention_kg(aligned_img, kgs, kgs)
         
-        fused_feature = torch.cat([focused_img, focused_kg], dim = -1)
+        focused_kg, _ = self.fuse_attention_img(kgs, aligned_img, aligned_img)
+        focused_img, _ = self.fuse_attention_kg(aligned_img, kgs, kgs)
+        
+        advanced_kg = focused_kg + kgs
+        advanced_img = focused_img + aligned_img
 
-        prob_logits = self.classifier_1(fused_feature)
-        '''
 
-        focused_img, _ = self.fuse_attention_img(kgs, aligned_img, aligned_img)
-        prob_logits = self.classifier(focused_img)
+        # fused_feature, _ = self.fuse_attention(focused_kg, focused_img, focused_img)
+        # fused_feature = torch.cat((focused_kg, focused_img), dim = 1)
+        fused_feature = advanced_kg + advanced_img
+
+        # prob_logits = self.classifier_1(fused_feature)
+        
+        # prob_logits_1 = self.classifier_(focused_img)
+        # prob_logits_2 = self.classifier(focused_kg)
+        # prob_logits = torch.softmax((prob_logits_1 + prob_logits_2), dim = 1)
+
+        # focused_img, _ = self.fuse_attention_img(kgs, aligned_img, aligned_img)
+        # focused_kg, _ = self.fuse_attention_kg(aligned_img, kgs, kgs)
+        prob_logits = self.classifier(fused_feature)
 
         pred_labels = torch.argmax(prob_logits, dim = 1)
 

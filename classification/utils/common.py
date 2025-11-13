@@ -1,14 +1,14 @@
 import os
-import json
-import chardet
 import torch
 from tqdm import tqdm   #进度条库
-from PIL import Image
 from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
 import numpy as np
 import random
 from sklearn.metrics import roc_curve, auc
+
+import matplotlib.font_manager as fm
+fm.fontManager.addfont('/mnt/breast_cancer_multimodal/classification/fonts/TIMES.TTF')
 
 def split_dataset(path, train_ratio, valid_ratio, test_ratio):   #分割数据集
     
@@ -49,7 +49,7 @@ def save_model(output_path, model_type, model):
     output_model_dir = os.path.join(output_path, model_type)    #输出模型的保存目录
     if not os.path.exists(output_model_dir): os.makedirs(output_model_dir)
     model_to_save = model.module if hasattr(model, 'module') else model     # Only save the model it-self
-    output_model_file = os.path.join(output_model_dir, 'pytorch_model_multimodal_bicrossmodel_0702_1.bin')
+    output_model_file = os.path.join(output_model_dir, 'pytorch_model_multimodal_concat_1112_1.bin')
     torch.save(model_to_save.state_dict(), output_model_file)
 
 def load_model(model, filename):
@@ -129,9 +129,7 @@ def earlystop_draw(tloss_list, vloss_list, dirc):
 
 def roc_draw(true_labels, pred_scores, dirc):
 
-    font = {'style': 'Times New Roman'}
     plt.rc('font', family = 'Times New Roman')
-
 
     if isinstance(true_labels, torch.Tensor):
         true_labels = true_labels.cpu().numpy()
@@ -139,7 +137,7 @@ def roc_draw(true_labels, pred_scores, dirc):
         pred_scores = pred_scores.cpu().numpy()
 
     # 计算ROC曲线   
-    fpr, tpr, thresholds = roc_curve(true_labels, pred_scores)
+    fpr, tpr, thresholds = roc_curve(true_labels, pred_scores, drop_intermediate = False)
     roc_auc = auc(fpr, tpr)
 
     # 绘制ROC曲线
@@ -154,5 +152,5 @@ def roc_draw(true_labels, pred_scores, dirc):
     plt.ylabel('True Positive Rate')
     plt.title('Multimodal Classifier ROC Curve')
     plt.legend(loc = 'lower right')
-    plt.savefig('multimodal_roc.svg', dpi = 600, bbox_inches = 'tight', format = 'svg')
+    plt.savefig('roc.svg', dpi = 600, bbox_inches = 'tight', format = 'svg')
     # plt.savefig(dirc)

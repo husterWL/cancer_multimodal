@@ -7,7 +7,14 @@ Dataset api: 与api_encode配合, 将api_encode的返回结果构造成Dataset�
 import numpy as np
 import torch
 from torch.utils.data import Dataset
+from torchvision import transforms
+from PIL import Image
 
+img_transforms = transforms.Compose([
+    transforms.Resize((224, 224)),
+    transforms.ToTensor(),
+    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+])
 
 class apidataset(Dataset):
 
@@ -35,7 +42,8 @@ class apidataset(Dataset):
     def collate_fn(self, batch):  #用于将数据集中的每个样本转换为一个批次，以便在训练和测试过程中使用。
         
         guids = [b[0] for b in batch]
-        imgs = [b[1] for b in batch]
+        imgs = [img_transforms(Image.open(b[1]).convert('RGB')) for b in batch]
+        # imgs = [b[1] for b in batch]
         imgs = torch.stack(imgs)
         ehrs = [b[2] for b in batch]
         ehrs = torch.stack(ehrs)
@@ -48,22 +56,25 @@ class apidataset(Dataset):
     
 class uniapidataset(Dataset):
 
-    def __init__(self, tensors, labels):
+    def __init__(self, guids, tensors, labels):
         super().__init__()
+        self.guids = guids
         self.tensors = tensors
         self.labels = labels
     
     def __len__(self):
-        return len(self.tensors)
+        return len(self.guids)
     
     def __getitem__(self, index):
-        return self.tensors[index], self.labels[index]
+        return self.guids[index], self.tensors[index], self.labels[index]
     
     def collate_fn(self, batch):
         
-        tensors = [b[0] for b in batch]
+        guids = [b[0] for b in batch]
+        tensors = [img_transforms(Image.open(b[1]).convert('RGB')) for b in batch]
+        # tensors = [b[1] for b in batch]
         tensors = torch.stack(tensors)
-        labels = torch.LongTensor([b[1] for b in batch])
+        labels = torch.LongTensor([b[2] for b in batch])
 
         # print(type(tensors), type(labels))
-        return tensors, labels
+        return guids, tensors, labels

@@ -11,19 +11,42 @@ from emr_process import EMR_FEATURES, only_29dim, one_hot
 import pickle
 import numpy as np
 import time
-# print(os.getcwd())
-
+import h5py
+# import openslide
+from torchvision import transforms
+from PIL import Image
 '''
 1、特征向量的读取
 2、划分训练集和测试集
 3、另存为数据文件，需要将单模态与多模态的数据划分应该一致，即单模态的各部分的id应该与多模态的各部分的id一致
 '''
 
-# tensor_cancer = torch.load(
-#     r"D:\BaiduNetdiskDownload\multimodal_breast_cancer\Features_directory\pt_files\benign_S0000004_1.pt")
 
-# print(tensor_cancer.shape)  # 输出：torch.Size([patchs_num, 1048])
-# print(tensor_cancer[1])
+MODEL2CONSTANTS = {
+	"resnet50_trunc": {
+		"mean": [0.485, 0.456, 0.406],
+		"std": [0.229, 0.224, 0.225]
+	},
+
+}
+
+def get_eval_transforms(mean, std, target_img_size = -1):
+	trsforms = []
+	
+	if target_img_size > 0:
+		trsforms.append(transforms.Resize(target_img_size))
+	trsforms.append(transforms.ToTensor())
+	trsforms.append(transforms.Normalize(mean, std))
+	trsforms = transforms.Compose(trsforms)
+
+	return trsforms
+
+constants = MODEL2CONSTANTS['resnet50_trunc']
+img_transforms = get_eval_transforms(
+    mean = constants['mean'],
+    std = constants['std'],
+    target_img_size = 224,
+)
 
 
 def read_tensor(labelfile, tensor_path):
@@ -119,7 +142,7 @@ def read_kg(labelfile, tensor_path):
     kg_list = []
     id_list = []
     df_label = pd.read_csv(labelfile)
-    kg_embeddings = pickle.load(open('./data/patient_embeddings.pkl', 'rb'))
+    kg_embeddings = pickle.load(open('./data/patient_embeddings_3.pkl', 'rb'))
     kg_zero = np.zeros(512, np.float32)
 
 
@@ -155,7 +178,7 @@ def read_tensor_emr(labelfile, tensor_path, emr_path):
     emr_df = pd.read_csv(emr_path)
     # only_29dim(emr_df.loc[:, EMR_FEATURES[1: -1]])
     emr_df_ = one_hot(emr_df.loc[:, EMR_FEATURES[1: -1]])
-    kg_embeddings = pickle.load(open('./data/patient_embeddings.pkl', 'rb'))
+    kg_embeddings = pickle.load(open('./data/patient_embeddings_3.pkl', 'rb'))
     kg_zero = np.zeros(512, np.float32)
 
     benign_num = 0
@@ -218,117 +241,145 @@ def read_tensor_emr(labelfile, tensor_path, emr_path):
     ]
     '''
 
+#2025年11月4日
 
+def read_img(labelfile, coords_path, img_path):
+    img_list = []
+    df_label = pd.read_csv(labelfile)
+    # print(df_label.head())
+    benign_num = 0
+    malignant_num = 0
 
-# labelfile = r'D:\BaiduNetdiskDownload\multimodal_breast_cancer\Image_list_new.csv'
-# tensor_path = r'D:\BaiduNetdiskDownload\multimodal_breast_cancer\Features_directory\pt_files'
-# emr_path = r'D:\BaiduNetdiskDownload\multimodal_breast_cancer\EMR.csv'
-# list = read_tensor_emr(labelfile, tensor_path, emr_path)
-# print(list[0]['tensor'].dtype)
-# print(list[0])
+    for root, dirs, files in os.walk(coords_path):
+        for file in tqdm(files, desc = '------------------Processing files'):
+            name = re.match(r'^[^\.]+', file).group(0)
+            name1 = name.split('_')[1]
+            name2 = name.split('_')[2]
+            if df_label.loc[df_label['slide_id'] == name, 'label'].values == 'normal_tissue':   #逻辑错误
+                label = 'benign'
+                benign_num += 1
+            else:
+                label = 'malignant'
+                malignant_num += 1
+            with h5py.File(os.path.join(root, file), 'r') as f:
+                # print(f['features'].shape)
+                # print(f['features'][:])
 
-# with open('./classification/data/data_id.json', 'w') as wf:
-#     json.dump(list2, wf, indent = 4) 
-    #尝试将Tensor对象序列化为JSON时，会遇到错误TypeError: Object of type 'Tensor' is not JSON serializable。这是因为Tensor对象不是JSON序列化数据类型，所以无法直接写入JSON文件。
-    #需要先将tensor转换为list
-    #但是直接转换为list，会丢失精度，所以可以转换为字符串。并且json格式也比.pt格式占据的空间大很多
+                # print(f['coords'].shape)
+                # print(f['coords'][:])
+                coords = f['coords'][:]
+                # patch_level = f['coords'].attrs['patch_level']
+                # patch_size = f['coords'].attrs['patch_size']
+                patch_level = 0
+                patch_size = 256
+            '''
+            [   
+                [   0    0]
+                [   0  256]
+                [   0  512]
+                [   0  768]
+                [   0 1024]
+                [   0 1280]
+                [ 256    0]
+                [ 256  256]
+                ....
+            ]
+            '''
+            # print(len(tensor))  # 输出：torch.Size([patchs_num, 1024])
+            # slide_file_path = os.path.join(img_path, name + '.tif')
+            
+            # for i in tqdm(range(len(coords)), desc = '-------------Reading patches from ' + slide_file_path):
+            for i in range(len(coords)):
+                id = '_'.join([name1, name2, str(i + 1)])
+                #读取wsi病理图像
+                patch_path = os.path.join(img_path, id + '.png')
+                # if os.path.exists(save_path):
+                #     print('skip: ' + slide_file_path)
+                #     break
 
+                # wsi = openslide.open_slide(slide_file_path)
+                # img = wsi.read_region(coords[i], patch_level, (patch_size, patch_size)).convert('RGB')
+                
+                # img = Image.open(patch_path).convert('RGB')
+                #保存用
+                # img.save(save_path)
 
-'''
-可以只对id写入json，然后tensor，emr，这些，在载入内存之后，可以根据id去取tensor，emr等数据。
-如果将id以及数据地址写入，在之后的话根据地址去io，会产生大量的io时间，不利于训练。
-'''
+                # img = img_transforms(img)
+                case = {'id': id, 'tensor': patch_path, 'label': label}
+                img_list.append(case)
 
-'''
-with open('./classification/data/data_id.json', 'r') as f:
-    data_id = json.load(f)
-    train_ratio = 0.7
-    valid_ratio = 0.1
-    test_ratio = 0.2
-    train_num = int(len(data_id) * train_ratio)
-    valid_num = int(len(data_id) * valid_ratio)
-    test_num = int(len(data_id) * test_ratio)
-    # assert train_num + valid_num +test_num == len(data_id)
-    
-    
-    random.shuffle(data_id)
-    train_data = []
-    valid_data = []
-    test_data = []
-    for id in data_id:
-        # print(id)
-        if len(train_data) < train_num:
-            train_data.append(id)
-        elif len(valid_data) < valid_num:
-            valid_data.append(id)
-        else:
-            test_data.append(id)
-    
-    print(len(train_data), '\n',len(valid_data), '\n', len(test_data))
-    print('finish')
+    print(len(img_list))
+    print("benign:", benign_num, "malignant:", malignant_num)   #benign: 0 malignant: 3693
+    print("读取完成")
 
-    with open('./classification/data/train_id_1.txt', 'w') as f:
-        for id in tqdm(train_data, desc='-----------train data'):
-            f.write(id['id'])
-            f.write('\n')
-    
-    with open('./classification/data/valid_id_1.txt', 'w') as f:
-        for id in tqdm(valid_data, desc='-----------valid data'):
-            f.write(id['id'])
-            f.write('\n')
+    return img_list
 
-    with open('./classification/data/test_id_1.txt', 'w') as f:
-        for id in tqdm(test_data, desc = '-----------test data'):
-            f.write(id['id'])
-            f.write('\n')
-'''
+def read_img_emr(labelfile, coords_path, img_path, emr_path):
 
+    tensor_emr_list = []
+    id_list = []
+    df_label = pd.read_csv(labelfile)
+    emr_df = pd.read_csv(emr_path)
+    # only_29dim(emr_df.loc[:, EMR_FEATURES[1: -1]])
+    emr_df_ = one_hot(emr_df.loc[:, EMR_FEATURES[1: -1]])
+    kg_embeddings = pickle.load(open('./data/patient_embeddings_3.pkl', 'rb'))
+    kg_zero = np.zeros(512, np.float32)
 
-'''
-后期还可以重新划分一下，按照患者来划分
+    benign_num = 0
+    malignant_num = 0
 
-'''
+    for root, dirs, files in os.walk(coords_path):
+        for file in tqdm(files, desc = '------------------------[Processing files]'):
+            name = re.match(r'^[^\.]+', file).group(0)  #benign_S0000004_1
+            name1 = name.split('_')[1]  #S0000004
+            name2 = name.split('_')[2]  
+            if df_label.loc[df_label['slide_id'] == name, 'label'].values == 'normal_tissue':
+                label = 'benign'
+                benign_num += 1
+            else:
+                label = 'malignant'
+                malignant_num += 1
+            with h5py.File(os.path.join(root, file), 'r') as f:
+                
+                coords = f['coords'][:]
+                # patch_level = f['coords'].attrs['patch_level']
+                # patch_size = f['coords'].attrs['patch_size']
+                patch_level = 0
+                patch_size = 256
+            
+            # slide_file_path = os.path.join(img_path, name + '.tif')
 
-'''
-with open('./classification/data/data_id.json', 'r', encoding = 'utf-8') as f:
-    exclusionid = open('./classification/data/exclusiondata.txt', 'r', encoding = 'utf-8').readlines()
-    for i in range(len(exclusionid)): exclusionid[i] = exclusionid[i].strip('\n')
-    # print(exclusionid)
-    data_id = json.load(f)
-    
-    random.shuffle(data_id)
-    
-    train_data = []
-    valid_data = []
-    test_data = []
+            emr = emr_df_.loc[emr_df['Patient ID'] == name1].values[0]
 
-    for id in data_id:
-        x = id['id'].split('_')[0]
-        if x not in exclusionid:
-            train_data.append(id)
-        else:
-            test_data.append(id)
-    
-    validratio = 0.1
-    split_point = int(len(train_data) * (1 - validratio))
-    valid_data = train_data[split_point:]
-    train_data = train_data[:split_point]
+            # print(emr)
+            
+            # time.sleep(60)
+            if name1 in kg_embeddings:
+                kg = kg_embeddings[name1][0]
+            else:
+                kg = kg_zero
 
-    print(len(train_data), '\n', len(valid_data), '\n', len(test_data))
-    print('finish')
+            for i in range(len(coords)):
+                id = '_'.join([name1, name2, str(i + 1)])
+                patch_path = os.path.join(img_path, id + '.png')
+                #读取wsi病理图像
+                # wsi = openslide.open_slide(slide_file_path)
+                # img = wsi.read_region(coords[i], patch_level, (patch_size, patch_size)).convert('RGB')
+                # img = Image.open(patch_path).convert('RGB')
+                # img = img_transforms(img)
+                case = {'id': id, 'tensor': patch_path, 'emr': torch.FloatTensor(emr), 'kg': torch.FloatTensor(kg), 'label': label}
+                
+                tensor_emr_list.append(case)
 
-    with open('./classification/data/exclusion_train_id.txt', 'w') as f:
-        for id in tqdm(train_data, desc='-----------train data'):
-            f.write(id['id'])
-            f.write('\n')
-    
-    with open('./classification/data/exclusion_valid_id.txt', 'w') as f:
-        for id in tqdm(valid_data, desc='-----------valid data'):
-            f.write(id['id'])
-            f.write('\n')
+    print(len(tensor_emr_list))
 
-    with open('./classification/data/exclusion_test_id.txt', 'w') as f:
-        for id in tqdm(test_data, desc = '-----------test data'):
-            f.write(id['id'])
-            f.write('\n')
-'''
+    print("benign:", benign_num, "malignant:", malignant_num)
+    print("读取完成")
+
+    return tensor_emr_list
+
+# labelfile = '/mnt/Data/breast_cancer/Image_list_new.csv'
+# coords_path = '/mnt/Data/breast_cancer/h5_files'
+# img_path = '/mnt/Data/breast_cancer/image'
+# output_path = '/mnt/Data/breast_cancer/patches'
+# read_img(labelfile, coords_path, img_path, output_path)

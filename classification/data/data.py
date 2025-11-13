@@ -77,23 +77,25 @@ for id in filenames:
 
 # process_csv('Malignant_pathological_image7')
 
-path1 = './classification/data/entity_embeddings.npy'
-path2 = './classification/data/patient_embeddings.pkl'
+path1 = './data/entity_embeddings.npy'
+path2 = './data/patient_embeddings_1.pkl'
 
-load_array1 = np.load(path1, allow_pickle = True)
-print(load_array1)
+# load_array1 = np.load(path1, allow_pickle = True)
+# print(load_array1)
 
 load_array2 = pickle.load(open(path2, 'rb'))
-print(load_array2['S0000004'])
+# print(load_array2['S0000004'])
+print(len(load_array2))
 
-if 'S0005410' in load_array2: print('yes')
-else: print('no')
+# if 'S0005410' in load_array2: print('yes')
+# else: print('no')
 
-# keys_list = list(load_array2.keys())
-
-# for i in range(len(load_array2)):
-#     print(i)
-#     print(load_array2[keys_list[i]][0])
+keys_list = list(load_array2.keys())
+print(keys_list)
+for i in range(len(load_array2)):
+    print(i)
+    print(load_array2[keys_list[i]][0])
+    # print(load_array2[i])
 
 # zero = np.zeros(512, np.float32)
 # print(zero)

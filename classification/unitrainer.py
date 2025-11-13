@@ -2,11 +2,10 @@ import torch
 import torch.optim as optim
 from tqdm import tqdm
 from utils.common import roc_draw
-import numpy as np
 
 
 class Trainer():
-    def __init__(self, config, processor, model, device=torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')):
+    def __init__(self, config, processor, model, device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')):
         self.config = config
         self.processor = processor
         self.model = model.to(device)
@@ -16,18 +15,35 @@ class Trainer():
         parameters = [param for name, param in model.named_parameters()]
 
         self.optimizer = optim.Adam(params = parameters, lr = config.learning_rate, weight_decay = config.weight_decay)
+        self.scheduler = optim.lr_scheduler.ExponentialLR(optimizer = self.optimizer, gamma = config.scheduler_gamma)
+
+    def lr_decay(self):
+        self.scheduler.step()
 
     def train(self, train_loader):
         self.model.train()
         loss_list = []
         true_labels, pred_labels = [], []
 
-        for batch in tqdm(train_loader, desc = '-----------[Traing]'):
+        for batch in tqdm(train_loader, desc = '-----------[Training]'):
             # print(type(batch))
-            tensors, labels = batch
+            guids, tensors, labels = batch
             # print(type(tensors), type(labels))
             tensors, labels = tensors.to(self.device), labels.to(self.device)
-            pred, loss = self.model(tensors, labels=labels)
+            pred, loss = self.model(tensors, labels = labels)
+
+            '''
+            测试用
+            '''
+            # features, pred, loss = self.model(tensors, labels = labels)
+            # asset_dict = {
+            #     'features': features.detach().cpu().numpy().astype(np.float32),
+            #     'guids': guids,
+            # }
+            # print(asset_dict)
+            # with open(self.config.output_path + '/features.json', 'w') as f:
+            #     json.dump(asset_dict, f, indent = 4)
+            
             loss_list.append(loss.item())
             true_labels.extend(labels.tolist())
             pred_labels.extend(pred.tolist())
@@ -45,9 +61,15 @@ class Trainer():
         true_labels, pred_labels = [], []
 
         for batch in tqdm(valid_lodaer, desc='----- [Validing] '):
-            tensors, labels = batch
+            guids, tensors, labels = batch
             tensors, labels = tensors.to(self.device), labels.to(self.device)
             pred, loss = self.model(tensors, labels = labels)
+
+            # asset_dict = {
+            #     'features': features.detach().cpu().numpy().astype(np.float32),
+            #     'guids': guids,
+            # }
+            # print(asset_dict)
 
             # metric
             val_loss += loss.item()
@@ -63,21 +85,22 @@ class Trainer():
         test_loss = 0
         true_labels, pred_labels, pred_scores = [], [], []
 
-        with torch.no_grad():
-            for batch in tqdm(test_loader, desc='----- [Predicting] '):
-                tensors, labels = batch
-                tensors, labels = tensors.to(self.device), labels.to(self.device)
-                pred, scores = self.model(tensors)
+        for batch in tqdm(test_loader, desc='----- [Predicting] '):
+            guids, tensors, labels = batch
+            tensors, labels = tensors.to(self.device), labels.to(self.device)
+            pred, scores = self.model(tensors)
 
 
-                true_labels.extend(labels.tolist())
-                pred_labels.extend(pred.tolist())
-                pred_scores.extend(scores.tolist())
+            true_labels.extend(labels.tolist())
+            pred_labels.extend(pred.tolist())
+            pred_scores.extend(scores.tolist())
 
-        np.save('true_labels.npy', np.array(true_labels))
-        np.save('pred_scores.npy', np.array(pred_scores))
+        # np.save(self.config.output_path + '/true_labels_unimodal_univision_0723_3.npy', np.array(true_labels))
+        # np.save(self.config.output_path + '/pred_scores_unimodal_univision_0723_3.npy', np.array(pred_scores))
 
         # return [(guid, label) for guid, label in zip(pred_guids, pred_labels)]
         metrics, report_dict = self.processor.metric(true_labels, pred_labels)
-        roc_draw(true_labels, pred_scores, self.config.output_path + '/roc_curve.jpg')
+        # roc_draw(true_labels, pred_scores, self.config.output_path + '/' + self.config.model_type + '/roc_curve.jpg')
         return metrics, report_dict
+
+
