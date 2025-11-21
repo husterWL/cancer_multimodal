@@ -78,3 +78,73 @@ class uniapidataset(Dataset):
 
         # print(type(tensors), type(labels))
         return guids, tensors, labels
+
+class wsi_dataset(Dataset):
+
+    def __init__(self, config, guids, imgs, coords, EHRs = None, KGs = None, labels = None) -> None:
+        super().__init__()
+        if not config.model_type == 'unimodal':
+            self.guids = guids
+            self.imgs = imgs
+            self.coords = coords
+            self.EHRs = EHRs
+            self.KGs = KGs
+            self.labels = labels
+            self.config = config
+        
+        else:
+            self.guids = guids
+            self.imgs = imgs
+            self.coords = coords
+            self.labels = labels
+            self.config = config
+
+    def __len__(self):
+        return len(self.guids)
+    
+    def __getitem__(self, index):
+        if not self.config.model_type == 'unimodal':
+            return self.guids[index], self.imgs[index], self.coords[index], self.EHRs[index], self.KGs[index], self.labels[index]
+        else:
+            return self.guids[index], self.imgs[index], self.coords[index], self.labels[index]
+        
+    def collate_fn(self, batch):
+            
+        guids = [b[0] for b in batch]
+            
+
+        if not self.config.model_type == 'unimodal':
+            imgs = []
+            for b in batch:
+                # imgs.append([img_transforms(Image.open(patch).convert('RGB')) for patch in b[1]])
+                img= []
+                for patch in b[1]:
+                    img.append(img_transforms(Image.open(patch).convert('RGB')))
+                imgs.append(torch.stack(img))
+            # imgs = [b[1] for b in batch]
+            # imgs = torch.stack(imgs)
+            coords = [b[2] for b in batch]
+            ehrs = [b[3] for b in batch]
+            ehrs = torch.stack(ehrs)
+            kgs = [b[4] for b in batch]
+            kgs = torch.stack(kgs)
+            labels = torch.LongTensor([b[5] for b in batch])
+
+            return (guids, imgs, coords, ehrs, kgs, labels)
+
+            
+        else:
+            imgs = []
+            for b in batch:
+                # imgs.append([img_transforms(Image.open(patch).convert('RGB')) for patch in b[1]])
+                img= []
+                for patch in b[1]:
+                    img.append(img_transforms(Image.open(patch).convert('RGB')))
+                imgs.append(torch.stack(img))
+            # imgs = [b[1] for b in batch]
+            # imgs = torch.stack(imgs)
+            coords = [b[2] for b in batch]
+            labels = torch.LongTensor([b[3] for b in batch])
+
+            return (guids, imgs, coords, labels)
+

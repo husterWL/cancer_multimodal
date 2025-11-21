@@ -2,15 +2,17 @@ import cv2
 import matplotlib.pyplot as plt
 import torch
 import numpy as np
+from tqdm import tqdm
 
 class GradCAM():
-    def __init__(self, model, target_layer = None, device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')):
+    def __init__(self, config, model, target_layer = None, device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')):
         """
         Args:
             model: 模型
             target_layer: 目标卷积层（通常是最后一个卷积层）
         """
-        self.model = model
+        self.config = config
+        self.model = model.to(device)
         self.model.eval()
         if hasattr(model.resnet, 'model'):
         # 如果是timm模型
@@ -176,54 +178,115 @@ class GradCAM():
             break  # 只处理第一个图像
 
 # 批量处理多个图像
-    def batch_gradcam_visualization(self, dataloader, num_images=5):
+    def batch_gradcam_visualization(self, dataloader, patch_size = 256, scale_factor = 0.1, blur_sigma = 3):
         """批量生成Grad-CAM可视化"""
-        
-        
-        images_processed = 0
-        
-        with torch.no_grad():
-            for batch_idx, (images, labels) in enumerate(dataloader):
-                if images_processed >= num_images:
-                    break
-                    
-                for i in range(len(images)):
-                    if images_processed >= num_images:
-                        break
-                        
-                    image_tensor = images[i:i+1].to(self.device)
-                    original_image = images[i].permute(1, 2, 0).cpu().numpy()
-                    
-                    # 反归一化
-                    original_image = (original_image * np.array([0.229, 0.224, 0.226]) + 
-                                np.array([0.485, 0.456, 0.406]))
-                    original_image = np.clip(original_image, 0, 1)
-                    
-                    # 生成Grad-CAM
-                    try:
-                        heatmap, pred_class = self.create_gradcam_for_model(
-                            image_tensor, original_image
-                        )
-                        images_processed += 1
-                        
-                        # 可以保存结果
-                        plt.savefig(f'gradcam_result_{images_processed}.png', 
-                                bbox_inches='tight', dpi=300)
-                        plt.close()
-                        
-                    except Exception as e:
-                        print(f"处理图像时出错: {e}")
-                        continue
 
-# 使用示例
-# if __name__ == "__main__":
-#     # 假设你已经加载了模型和数据
-#     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-#     model = Univision(config).to(device)
-#     model.load_state_dict(torch.load("your_model_path.pth"))
-    
-#     # 测试单个图像
-#     test_gradcam_on_single_image(model, test_dataloader, device)
-    
-#     # 或者批量处理
-#     batch_gradcam_visualization(model, test_dataloader, device, num_images=10)
+        # 创建缩放的画布
+        heatmap_w = int(2048 * scale_factor)
+        heatmap_h = int(1536 * scale_factor)
+        wsi_heatmap = np.zeros((heatmap_h, heatmap_w), dtype = np.float32)
+        count_map = np.zeros((heatmap_h, heatmap_w), dtype = np.int32)
+
+        all_attention_scores = []
+        all_coords = []
+        
+        for batch in tqdm(dataloader, desc = 'Grad-CAM Visualization-------------'):
+            if self.config.model_type == 'multimodal':
+                guids, imgs_list, coords_list, _, _, labels = batch
+            else:
+                guids, imgs_list, coords_list, labels = batch
+            
+            for i, (guid, patch_imgs, patch_coords, label) in enumerate(zip(guids, imgs_list, coords_list, labels)):
+                patch_attention_scores = []
+                
+                wsi_heatmap = np.zeros((heatmap_h, heatmap_w), dtype = np.float32)
+                count_map = np.zeros((heatmap_h, heatmap_w), dtype = np.int32)
+
+                #根据guid和label读取tif文件，获取缩略图
+                if label == 0:
+                    wsi_path = '/mnt/Data/breast_cancer/image/' + 'benign_' + guid + '.tif'
+                else:
+                    wsi_path = '/mnt/Data/breast_cancer/image/' + 'malignant_' + guid + '.tif'
+                thumbnail = cv2.imread(wsi_path)
+
+                # 处理该样本的所有patch
+                for j, (patch_img, coord) in enumerate(zip(patch_imgs, patch_coords)):
+                    
+                    # img_tensor = patch_img.to(self.device)
+                    img_tensor = patch_imgs[j:j+1].to(self.device)
+
+
+                    score, _ = self.generate_cam(img_tensor, label)
+                    cam_resized = cv2.resize(score, (patch_size, patch_size))
+                    target_region = wsi_heatmap[y_scaled:y_end, x_scaled:x_end]
+            
+                    # 确保形状匹配
+                    if cam_resized.shape != target_region.shape:
+                        cam_final = cv2.resize(cam_resized, 
+                                            (target_region.shape[1], target_region.shape[0]))
+                    else:
+                        cam_final = cam_resized
+                    patch_attention_scores.append(score)
+
+                    x, y = coord[0], coord[1]
+                    x_scaled = int(x * scale_factor)
+                    y_scaled = int(y * scale_factor)
+                    patch_size_scaled = int(patch_size * scale_factor)
+                    
+                    # 确保坐标在范围内
+                    x_end = min(x_scaled + patch_size_scaled, heatmap_w)
+                    y_end = min(y_scaled + patch_size_scaled, heatmap_h)
+                    x_scaled = max(0, x_scaled)
+                    y_scaled = max(0, y_scaled)
+                    
+                    if x_end > x_scaled and y_end > y_scaled:
+                        # 将注意力分数添加到对应区域
+                        # wsi_heatmap[y_scaled:y_end, x_scaled:x_end] += score
+                        wsi_heatmap[y_scaled:y_end, x_scaled:x_end] += cam_final
+                        count_map[y_scaled:y_end, x_scaled:x_end] += 1
+                
+                all_attention_scores.extend(patch_attention_scores)
+                all_coords.extend([coord for coord in patch_coords])
+                '''
+                需要注意，应该按照wsi来计算wsi_heatmap，每个batch都有多张wsis
+                '''
+                # 处理重叠区域，计算平均注意力
+                count_map[count_map == 0] = 1  # 避免除零
+                wsi_heatmap_avg = wsi_heatmap / count_map
+        
+                # 应用高斯模糊使热力图更平滑
+                if blur_sigma > 0:
+                    wsi_heatmap_avg = cv2.GaussianBlur(wsi_heatmap_avg, 
+                                                    (2 * int(blur_sigma) + 1, 2 * int(blur_sigma) + 1), 
+                                                    blur_sigma)
+                # 归一化到[0, 1]
+                if wsi_heatmap_avg.max() > 0:
+                    wsi_heatmap_avg = (wsi_heatmap_avg - wsi_heatmap_avg.min()) / (wsi_heatmap_avg.max() - wsi_heatmap_avg.min())
+
+                fig, axes = plt.subplots(1, 2 if thumbnail is not None else 1, figsize = (15, 12))
+
+                if thumbnail is not None:
+                    axes[0].imshow(thumbnail)
+                    axes[0].set_title('Thumbnail')
+                    axes[0].axis('off')
+
+                    im = axes[1].imshow(wsi_heatmap_avg, cmap = 'jet', alpha = 0.8)
+                    axes[1].set_title('Heatmap')
+                    axes[1].axis('off')
+
+                    plt.colorbar(im, ax = axes[1], fraction = 0.046, pad = 0.04)
+                else:
+                    im = axes.imshow(wsi_heatmap_avg, cmap = 'jet', alpha = 0.8)
+                    axes.set_title('Heatmap')
+                    axes.axis('off')
+                    plt.colorbar(im, ax = axes, fraction = 0.046, pad = 0.04)
+                plt.tight_layout()
+
+                save_path  = '/mnt/breast_cancer_multimodal/heatmap/' + guid + '.png'
+                plt.savefig(save_path, dpi = 300, bbox_inches = 'tight')
+                print('Saved:', save_path)
+                plt.close()
+                
+
+
+

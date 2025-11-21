@@ -9,9 +9,10 @@ from torch.utils.data import DataLoader
 '''
 这里需要导入encode、decode、metric以及dataset的API
 '''
-
-from apidataset import apidataset
-from apidataset import uniapidataset
+import os
+import h5py
+from apidataset import apidataset, uniapidataset, wsi_dataset
+# from apidataset import uniapidataset
 from apiencode import api_encode
 from apidecode import api_decode
 from apimetric import api_metric
@@ -115,20 +116,77 @@ class wsi_patch_dataset():
         self.labelvocab.add_label('malignant')
 
         if not self.config.model_type == 'unimodal':
-            guids, encoded_imgs, encoded_EHRs, encoded_KGs, encoded_labels = [], [], [], [], []
+            guids, encoded_imgs, encoded_coords, encoded_EHRs, encoded_KGs, encoded_labels = [], [], [], [], [], []
+            # imgs = {}
             for line in tqdm(data, desc='----- [Encoding]'):
                 guid, img, emr, kg, label = line['id'], line['tensor'], line['emr'], line['kg'], line['label']
-
-                guids.append(guid)
-                encoded_imgs.append(img)
-                encoded_EHRs.append(emr)
-                encoded_KGs.append(kg)
-                encoded_labels.append(self.labelvocab.label_to_value(label))
-        
-        elif self.config.fusion_type == 'unimodal' or self.config.fusion_type == 'Univision_sa':
-            guids, tensors, encoded_labels = [], [], []
+                
+                ids = guid.split('_')
+                wsi_id = ids[0] + '_' + ids[1]
+                coord_path = os.path.join(self.config.coords_path, f'{label}_{wsi_id}.h5')
+                # loc = ids[2]
+                with h5py.File(coord_path, 'r') as f:
+                    coord = f['coords'][int(ids[2]) - 1]
+                
+                if wsi_id not in guids:
+                    guids.append(wsi_id)
+                    # encoded_imgs.append(img)
+                    # imgs[wsi_id] = [img]
+                    encoded_imgs.append([img])
+                    encoded_coords.append([coord])
+                    encoded_EHRs.append(emr)
+                    encoded_KGs.append(kg)
+                    encoded_labels.append(self.labelvocab.label_to_value(label))
+                else:
+                    # imgs[wsi_id].append(img)
+                    index = guids.index(wsi_id)
+                    encoded_imgs[index].append(img)
+                    encoded_coords[index].append(coord)
+                    
+                # guids.append(guid)
+                # encoded_imgs.append(img)
+                # encoded_EHRs.append(emr)
+                # encoded_KGs.append(kg)
+                # encoded_labels.append(self.labelvocab.label_to_value(label))
+            dataset = wsi_dataset(
+                config = self.config, 
+                guids = guids, 
+                imgs = encoded_imgs, 
+                coords = encoded_coords, 
+                EHRs = encoded_EHRs, 
+                KGs = encoded_KGs, 
+                labels = encoded_labels
+            )
+            return DataLoader(dataset = dataset, **parameters, collate_fn = dataset.collate_fn)
+            
+            
+        else:
+            guids, encoded_imgs, encoded_coords, encoded_labels = [], [], [], []
             for line in tqdm(data, desc='----- [Encoding]'):
-                guid, tensor, label = line['id'], line['tensor'], line['label']
-                guids.append(guid)
-                tensors.append(tensor)
-                encoded_labels.append(self.labelvocab.label_to_value(label))
+                guid, img, label = line['id'], line['tensor'], line['label']
+                ids = guid.split('_')
+                wsi_id = ids[0] + '_' + ids[1]
+                coord_path = os.path.join(self.config.coords_path, f'{label}_{wsi_id}.h5')
+                # loc = ids[2]
+                with h5py.File(coord_path, 'r') as f:
+                    coord = f['coords'][int(ids[2]) - 1]
+                
+                if wsi_id not in guids:
+                    guids.append(wsi_id)
+                    # encoded_imgs.append(img)
+                    # imgs[wsi_id] = [img]
+                    encoded_imgs.append([img])
+                    encoded_coords.append([coord])
+                    encoded_labels.append(self.labelvocab.label_to_value(label))
+                else:
+                    index = guids.index(wsi_id)
+                    encoded_imgs[index].append(img)
+                    encoded_coords[index].append(coord)
+            dataset = wsi_dataset(
+                config = self.config, 
+                guids = guids, 
+                imgs = encoded_imgs, 
+                coords = encoded_coords, 
+                labels = encoded_labels
+            )
+            return DataLoader(dataset = dataset, **parameters, collate_fn = dataset.collate_fn)

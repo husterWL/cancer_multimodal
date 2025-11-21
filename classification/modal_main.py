@@ -6,7 +6,7 @@ import argparse
 from Config import config
 from utils.data_read import read_tensor, read_tensor_emr, read_emr, read_kg, read_img_emr, read_img
 from utils.common import save_model, loss_draw, acc_draw, other_draw, earlystop_draw
-from utils.dataprocess import Uni_processor, Processor
+from utils.dataprocess import Uni_processor, Processor, wsi_patch_dataset
 from unitrainer import Trainer
 from trainer import multitrainer
 from early_stopping_pytorch import EarlyStopping
@@ -60,7 +60,8 @@ elif config.model_type == 'multimodal':
     model = FuseModel(config)
     trainer = multitrainer(config, processor, model, device)
 
-gradcam = GradCAM(model)
+gradcam = GradCAM(config, model)
+wsi_patch = wsi_patch_dataset(config)
 
 if not config.model_type == 'unimodal':
     data = read_img_emr(config.labelfile, config.coords_path, config.img_path, config.emr_path)
@@ -251,13 +252,16 @@ def heat_map():
             for line in f.readlines():
                 test_data.append(lookup_data[line.strip('\n')])
 
-    test_loader = processor(test_data, config.test_params)
+    # test_loader = processor(test_data, config.test_params)
+    test_loader = wsi_patch(test_data, config.test_params)
     if config.load_model_path is not None:
         model.load_state_dict(torch.load(config.load_model_path, weights_only = True))
         # model.eval()
         # print(model.resnet.model.layer3)
     
-    gradcam.test_gradcam_on_single_image(test_loader)
+    # gradcam.test_gradcam_on_single_image(test_loader)
+    gradcam.batch_gradcam_visualization(test_loader)
+    
     
 
 

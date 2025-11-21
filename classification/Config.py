@@ -50,6 +50,8 @@ class config:
     train_params = {'batch_size': 16, 'shuffle': True, 'num_workers': 2}
     val_params = {'batch_size': 16, 'shuffle': False, 'num_workers': 2}
     test_params =  {'batch_size': 8, 'shuffle': False, 'num_workers': 2}
+    heat_params =  {'batch_size': 4, 'shuffle': False, 'num_workers': 2}
+
     
     #EMR
     EMR_FEATURES = ['Patient ID', 
