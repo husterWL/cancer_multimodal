@@ -84,7 +84,16 @@ class GradCAM():
         cam = cam - cam.min()
         cam = cam / (cam.max() + 1e-8)
         
-        return cam.squeeze().cpu().numpy(), class_idx
+        # 在返回前确保热力图是2D的
+        if cam.dim() > 2:
+            cam = cam.squeeze()
+        
+        # 确保是numpy数组且是2D
+        cam_np = cam.cpu().numpy() if torch.is_tensor(cam) else cam
+        if cam_np.ndim > 2:
+            cam_np = cam_np[0]  # 取第一个通道（如果是多通道）
+        
+        return cam_np, class_idx
 
     def visualize_gradcam(self, original_image, heatmap, alpha = 0.5):  # 必须添加self参数，否则original_image自动变成GradCAM类的属性
         """
@@ -184,8 +193,8 @@ class GradCAM():
         # 创建缩放的画布
         heatmap_w = int(2048 * scale_factor)
         heatmap_h = int(1536 * scale_factor)
-        wsi_heatmap = np.zeros((heatmap_h, heatmap_w), dtype = np.float32)
-        count_map = np.zeros((heatmap_h, heatmap_w), dtype = np.int32)
+        # wsi_heatmap = np.zeros((heatmap_h, heatmap_w), dtype = np.float32)
+        # count_map = np.zeros((heatmap_h, heatmap_w), dtype = np.int32)
 
         all_attention_scores = []
         all_coords = []
@@ -229,7 +238,7 @@ class GradCAM():
                     patch_attention_scores.append(score)
 
                     x, y = coord[0], coord[1]
-                    x_scaled = int(x * scale_factor)
+                    x_scaled = int(x * scale_factor)    #经过缩放的左上角坐标
                     y_scaled = int(y * scale_factor)
                     patch_size_scaled = int(patch_size * scale_factor)
                     
@@ -245,8 +254,8 @@ class GradCAM():
                         wsi_heatmap[y_scaled:y_end, x_scaled:x_end] += cam_final
                         count_map[y_scaled:y_end, x_scaled:x_end] += 1
                 
-                all_attention_scores.extend(patch_attention_scores)
-                all_coords.extend([coord for coord in patch_coords])
+                # all_attention_scores.extend(patch_attention_scores)
+                # all_coords.extend([coord for coord in patch_coords])
                 '''
                 需要注意，应该按照wsi来计算wsi_heatmap，每个batch都有多张wsis
                 '''
@@ -261,9 +270,23 @@ class GradCAM():
                                                     blur_sigma)
                 # 归一化到[0, 1]
                 if wsi_heatmap_avg.max() > 0:
-                    wsi_heatmap_avg = (wsi_heatmap_avg - wsi_heatmap_avg.min()) / (wsi_heatmap_avg.max() - wsi_heatmap_avg.min())
+                    wsi_heatmap_avg = (wsi_heatmap_avg - wsi_heatmap_avg.min()) / (wsi_heatmap_avg.max() - wsi_heatmap_avg.min() + 1e-8)
+                
+                wsi_heatmap_resized = cv2.resize(wsi_heatmap_avg, (thumbnail.shape[1], thumbnail.shape[0]))
+        
+                # 应用颜色映射
+                heatmap_colored = cv2.applyColorMap(np.uint8(255 * wsi_heatmap_resized), cv2.COLORMAP_JET)
+                heatmap_colored = cv2.cvtColor(heatmap_colored, cv2.COLOR_BGR2RGB)
+                
+                # 确保缩略图是RGB格式
+                if len(thumbnail.shape) == 2:  # 灰度图
+                    thumbnail = np.stack([thumbnail] * 3, axis = -1)
+                
+                # 叠加热力图
+                superimposed_img = heatmap_colored * 0.5 + thumbnail * (1 - 0.5)
+                superimposed_img = np.clip(superimposed_img, 0, 255).astype(np.uint8)
 
-                fig, axes = plt.subplots(1, 2 if thumbnail is not None else 1, figsize = (15, 12))
+                fig, axes = plt.subplots(1, 3 if thumbnail is not None else 1, figsize = (15, 12))
 
                 if thumbnail is not None:
                     axes[0].imshow(thumbnail)
@@ -274,7 +297,12 @@ class GradCAM():
                     axes[1].set_title('Heatmap')
                     axes[1].axis('off')
 
-                    plt.colorbar(im, ax = axes[1], fraction = 0.046, pad = 0.04)
+                    axes[2].imshow(superimposed_img)
+                    axes[2].set_title('Superimposed')
+                    axes[2].axis('off')
+
+                    plt.colorbar(im, ax = axes[2], fraction = 0.046, pad = 0.04)
+
                 else:
                     im = axes.imshow(wsi_heatmap_avg, cmap = 'jet', alpha = 0.8)
                     axes.set_title('Heatmap')
