@@ -4,7 +4,7 @@ sys.path.append('./utils')
 import torch
 import argparse
 from Config import config
-from utils.data_read import read_tensor, read_tensor_emr, read_emr, read_kg, read_img_emr, read_img
+from utils.data_read import read_tensor, read_tensor_emr, read_emr, read_kg, read_img_emr, read_img, read_img_text
 from utils.common import save_model, loss_draw, acc_draw, other_draw, earlystop_draw
 from utils.dataprocess import Uni_processor, Processor, wsi_patch_dataset
 from unitrainer import Trainer

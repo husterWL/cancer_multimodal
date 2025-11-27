@@ -7,7 +7,7 @@ from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
 import json
 from tqdm import tqdm
-from emr_process import EMR_FEATURES, only_29dim, one_hot
+from emr_process import EMR_FEATURES, only_29dim, one_hot, totext
 import pickle
 import numpy as np
 import time
@@ -383,3 +383,56 @@ def read_img_emr(labelfile, coords_path, img_path, emr_path):
 # img_path = '/mnt/Data/breast_cancer/image'
 # output_path = '/mnt/Data/breast_cancer/patches'
 # read_img(labelfile, coords_path, img_path, output_path)
+
+def read_img_text(labelfile, coords_path, img_path, emr_path):
+
+    tensor_text_list = []
+    id_list = []
+    df_label = pd.read_csv(labelfile)
+    emr_df = pd.read_csv(emr_path)
+    emr_df_ = totext(emr_df.loc[:, EMR_FEATURES[1: -1]])
+    kg_embeddings = pickle.load(open('./data/patient_embeddings_3.pkl', 'rb'))
+    kg_zero = np.zeros(512, np.float32)
+
+    benign_num = 0
+    malignant_num = 0
+
+    for root, dirs, files in os.walk(coords_path):
+        for file in tqdm(files, desc = '------------------------[Processing files]'):
+            name = re.match(r'^[^\.]+', file).group(0)  #benign_S0000004_1
+            name1 = name.split('_')[1]  #S0000004
+            name2 = name.split('_')[2]  
+            if df_label.loc[df_label['slide_id'] == name, 'label'].values == 'normal_tissue':
+                label = 'benign'
+                benign_num += 1
+            else:
+                label = 'malignant'
+                malignant_num += 1
+            with h5py.File(os.path.join(root, file), 'r') as f:
+                
+                coords = f['coords'][:]
+                # patch_level = f['coords'].attrs['patch_level']
+                # patch_size = f['coords'].attrs['patch_size']
+                patch_level = 0
+                patch_size = 256
+
+            text = emr_df_.loc[emr_df['Patient ID'] == name1]['all'].values[0]
+
+            if name1 in kg_embeddings:
+                kg = kg_embeddings[name1][0]
+            else:
+                kg = kg_zero
+
+            for i in range(len(coords)):
+                id = '_'.join([name1, name2, str(i + 1)])
+                patch_path = os.path.join(img_path, id + '.png')
+                case = {'id': id, 'tensor': patch_path, 'emr': text, 'kg': torch.FloatTensor(kg), 'label': label}
+                
+                tensor_text_list.append(case)
+
+    print(len(tensor_text_list))
+
+    print("benign:", benign_num, "malignant:", malignant_num)
+    print("读取完成")
+
+    return tensor_text_list

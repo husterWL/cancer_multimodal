@@ -100,6 +100,9 @@ class Bicrossmodel(nn.Module):
         self.resnet = get_encoder('resnet50_trunc')
 
         self.loss_func = nn.CrossEntropyLoss()
+
+        # self.attention_weights_img = None
+        # self.attention_weights_emr = None
         
     def forward(self, tensors, emrs, kgs, labels = None):
         

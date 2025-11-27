@@ -10,9 +10,9 @@ EMR_FEATURES = ['Patient ID',
                  'Activity', 'Capsules', 'Tenderness', 'Skin Adhesion', 'Pectoral Muscle Adhesion', 
                  'Diagnosis_Belnign_1_Malignant_2']
 
-# emr_path = r'D:\BaiduNetdiskDownload\multimodal_breast_cancer\EMR.csv'
-# df = pd.read_csv(emr_path)
-# print(df.head())
+emr_path = r'F:\multimodal_breast_cancer\EMR_text.csv'
+df = pd.read_csv(emr_path)
+print(df.head())
 
 # feature = df.loc[ : , EMR_FEATURES[1: -1]]
 # new = feature.copy()
@@ -46,6 +46,21 @@ def one_hot(dataframe):
     
     return dataframe    #106dims
 
+def totext(dataframe):
+    """
+    将DataFrame中的各列数据拼接为文本格式
+    
+    Args:
+        dataframe (pd.DataFrame): 输入的DataFrame数据
+        
+    Returns:
+        pd.DataFrame: 添加了'all'列的DataFrame，其中'all'列包含各列数据的文本拼接
+    """
+
+    df = dataframe[ : ]
+    df['all'] = df.apply(lambda row: '; '.join([f'{col}: {row[col]}' for col in df.columns]), axis = 1)
+    return df
+
 # for i in range(len(EMR_FEATURES[1:-1])):
 #     print(new[EMR_FEATURES[i+1]].value_counts())
 
@@ -64,3 +79,11 @@ def one_hot(dataframe):
 
 #大模型的扩充
 #使用TITAN对每一张WSI进行报告的生成
+
+# df1 = totext(df.loc[ : , EMR_FEATURES[1: -1]])
+# print(type(df1))
+# print(df1.columns)
+# print(df1.shape)
+# print(df1.index)
+# text = df1.loc[df['Patient ID'] == 'S0000004']['all'].values[0]
+# print(type(text))
