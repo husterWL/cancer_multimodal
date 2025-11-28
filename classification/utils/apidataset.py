@@ -16,6 +16,13 @@ img_transforms = transforms.Compose([
     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 ])
 
+img_vit_transforms = transforms.Compose([
+    # transforms.Resize((384, 384), Image.BICUBIC),
+    transforms.Resize((224, 224)),
+    transforms.ToTensor(),
+    transforms.Normalize(mean = [0.48145466, 0.4578275, 0.40821073], std = [0.26862954, 0.26130258, 0.27577711])
+])
+
 class apidataset(Dataset):
 
     def __init__(self, guids, imgs, EHRs, KGs, labels):
@@ -78,6 +85,48 @@ class uniapidataset(Dataset):
 
         # print(type(tensors), type(labels))
         return guids, tensors, labels
+
+class apidataset_text(Dataset):
+
+    def __init__(self, guids, imgs, ids, masks, KGs, labels):
+        super().__init__()
+        self.guids = guids
+        self.imgs = imgs
+        self.ids = ids
+        self.masks = masks
+        self.kgs =  KGs
+        self.labels = labels
+    
+    def __len__(self):
+        return len(self.guids)  #返回有多少个样本
+    
+    def __getitem__(self, index):
+        return self.guids[index], self.imgs[index], self.ids[index], self.masks[index], self.kgs[index], self.labels[index]
+    
+    '''
+    有问题的collate_fn函数
+    def collate_fn(self, batch):  #用于将数据集中的每个样本转换为一个批次，以便在训练和测试过程中使用。
+        guids, EHRs, imgs, labels = map(list, zip(*batch))
+        return torch.tensor(EHRs).long(), torch.tensor(imgs).float(), torch.tensor(labels).long()
+    '''
+
+    def collate_fn(self, batch):  #用于将数据集中的每个样本转换为一个批次，以便在训练和测试过程中使用。
+        
+        guids = [b[0] for b in batch]
+        imgs = [img_vit_transforms(Image.open(b[1]).convert('RGB')) for b in batch]
+        # imgs = [b[1] for b in batch]
+        imgs = torch.stack(imgs)
+        ids = [b[2] for b in batch]
+        ids = torch.stack(ids)
+        masks = [b[3] for b in batch]
+        masks = torch.stack(masks)
+        kgs = [b[4] for b in batch]
+        kgs = torch.stack(kgs)
+        labels = torch.LongTensor([b[5] for b in batch])
+
+
+        return guids, imgs, ids, masks, kgs, labels
+
 
 class wsi_dataset(Dataset):
 

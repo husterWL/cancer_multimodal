@@ -11,12 +11,16 @@ from torch.utils.data import DataLoader
 '''
 import os
 import h5py
-from apidataset import apidataset, uniapidataset, wsi_dataset
+from apidataset import apidataset, uniapidataset, wsi_dataset, apidataset_text
 # from apidataset import uniapidataset
 from apiencode import api_encode
 from apidecode import api_decode
 from apimetric import api_metric
 from tqdm import tqdm
+
+from transformers import CLIPTokenizer
+tokenizer = CLIPTokenizer.from_pretrained('/mnt/Model/clip_base_patch16')
+
 
 class LabelVocabulary():  #类的作用：将标签名(str)映射为整数(value)值
     UNK = 'UNK'
@@ -104,6 +108,47 @@ class Uni_processor():
     def to_loader(self, data, parameters):
         dataset = self.to_dataset(data)
         return DataLoader(dataset = dataset, **parameters, collate_fn = dataset.collate_fn)
+    
+class text_processor():
+    def __init__(self, config) -> None:
+        self.config = config
+        self.labelvocab = LabelVocabulary()
+    
+    def __call__(self, data, parameters):
+        return self.to_loader(data, parameters) 
+
+    def encode(self, data):
+        self.labelvocab.add_label('benign')
+        self.labelvocab.add_label('malignant')
+
+        
+        guids, tensors, emrs_ids, emrs_masks, kgs, encoded_labels = [], [], [], [], [], []
+        for line in tqdm(data, desc='----- [Encoding]'):
+            guid, tensor, text, kg, label = line['id'], line['tensor'], line['emr'], line['kg'], line['label']
+            guids.append(guid)
+            tensors.append(tensor)
+            # emrs.append(text)
+            encodings = tokenizer(text, padding = 'max_length', truncation = True, max_length=77, return_tensors = 'pt')
+            input_ids = encodings['input_ids'].squeeze(0)
+            attention_mask = encodings['attention_mask'].squeeze(0)
+            emrs_ids.append(input_ids)
+            emrs_masks.append(attention_mask)
+            kgs.append(kg)
+            encoded_labels.append(self.labelvocab.label_to_value(label))
+
+        return guids, tensors, emrs_ids, emrs_masks, kgs, encoded_labels
+    
+    def metric(self, inputs, outputs):
+        return api_metric(inputs, outputs)
+    
+    def to_dataset(self, data):
+        dataset_inputs = self.encode(data)
+        return apidataset_text(*dataset_inputs)
+
+    def to_loader(self, data, parameters):
+        dataset = self.to_dataset(data)
+        return DataLoader(dataset = dataset, **parameters, collate_fn = dataset.collate_fn)
+
 
 class wsi_patch_dataset():
     def __init__(self, config) -> None:

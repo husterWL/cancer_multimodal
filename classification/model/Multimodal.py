@@ -5,7 +5,7 @@ import torch
 import torch.nn as nn
 import torchvision.models as models
 from .Visionmodel import get_encoder
-
+from transformers import CLIPProcessor, CLIPModel
 
 class Bicrossmodel(nn.Module):
 
@@ -352,6 +352,40 @@ class ImgwithKG(nn.Module):
         # focused_img, _ = self.fuse_attention_img(kgs, aligned_img, aligned_img)
         # focused_kg, _ = self.fuse_attention_kg(aligned_img, kgs, kgs)
         prob_logits = self.classifier(fused_feature)
+
+        pred_labels = torch.argmax(prob_logits, dim = 1)
+
+        if labels is not None:
+            loss = self.loss_func(prob_logits, labels)
+            return pred_labels, loss
+        else:
+            return pred_labels, prob_logits[:, 1]
+        
+class clip_model(nn.Module):
+    def __init__(self, config):
+        super().__init__()
+        self.clip = CLIPModel.from_pretrained('/mnt/Model/clip_base_patch16')
+        self.processor = CLIPProcessor.from_pretrained('/mnt/Model/clip_base_patch16')
+        
+        # 2. 定义分类头 (输入维度是 Image_Embed + Text_Embed)
+        # CLIP Base的特征维度通常是 512，所以拼接后是 1024
+        self.classifier = nn.Sequential(
+            nn.Linear(512 + 512, 256),
+            nn.ReLU(),
+            nn.Dropout(0.2),
+            nn.Linear(256, 2)
+        )
+
+        self.loss_func = nn.CrossEntropyLoss()
+    
+    def forward(self, tensors, input_ids, attention_mask, labels = None):
+        
+        img_features= self.clip.get_image_features(pixel_values = tensors)
+        text_features = self.clip.get_text_features(input_ids = input_ids, attention_mask = attention_mask)
+
+        combined_features = torch.cat((img_features, text_features), dim = 1)
+
+        prob_logits = self.classifier(combined_features)
 
         pred_labels = torch.argmax(prob_logits, dim = 1)
 

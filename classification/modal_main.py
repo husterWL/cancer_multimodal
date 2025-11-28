@@ -6,9 +6,10 @@ import argparse
 from Config import config
 from utils.data_read import read_tensor, read_tensor_emr, read_emr, read_kg, read_img_emr, read_img, read_img_text
 from utils.common import save_model, loss_draw, acc_draw, other_draw, earlystop_draw
-from utils.dataprocess import Uni_processor, Processor, wsi_patch_dataset
+from utils.dataprocess import Uni_processor, Processor, wsi_patch_dataset, text_processor
 from unitrainer import Trainer
 from trainer import multitrainer
+from trainer_text import trainer_text
 from early_stopping_pytorch import EarlyStopping
 from heatmaps import GradCAM
 
@@ -59,12 +60,22 @@ elif config.model_type == 'multimodal':
         from model.Multimodal import ImgwithKG as FuseModel
     model = FuseModel(config)
     trainer = multitrainer(config, processor, model, device)
+elif config.model_type == 'clip':
+    processor = text_processor(config)
+    if config.fusion_type == 'clip':
+        from model.Multimodal import clip_model as FuseModel
+
+    model = FuseModel(config)
+    trainer = trainer_text(config, processor, model, device)
 
 gradcam = GradCAM(config, model)
 wsi_patch = wsi_patch_dataset(config)
 
 if not config.model_type == 'unimodal':
     data = read_img_emr(config.labelfile, config.coords_path, config.img_path, config.emr_path)
+
+elif config.model_type == 'clip':
+    data = read_img_text(config.labelfile, config.coords_path, config.img_path, config.emr_path)
 
 elif config.fusion_type == 'Univision' or config.fusion_type == 'Univision_sa':
     data = read_img(config.labelfile, config.coords_path, config.img_path)

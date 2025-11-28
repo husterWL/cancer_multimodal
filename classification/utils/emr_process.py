@@ -80,10 +80,11 @@ def totext(dataframe):
 #大模型的扩充
 #使用TITAN对每一张WSI进行报告的生成
 
-# df1 = totext(df.loc[ : , EMR_FEATURES[1: -1]])
-# print(type(df1))
-# print(df1.columns)
-# print(df1.shape)
-# print(df1.index)
-# text = df1.loc[df['Patient ID'] == 'S0000004']['all'].values[0]
-# print(type(text))
+df1 = totext(df.loc[ : , EMR_FEATURES[1: -1]])
+print(type(df1))
+print(df1.columns)
+print(df1.shape)
+print(df1.index)
+text = df1.loc[df['Patient ID'] == 'S0000004']['all'].values[0]
+print(type(text))
+print(text)
