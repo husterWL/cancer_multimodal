@@ -71,7 +71,7 @@ elif config.model_type == 'clip':
 gradcam = GradCAM(config, model)
 wsi_patch = wsi_patch_dataset(config)
 
-if not config.model_type == 'unimodal':
+if config.model_type == 'multimodal':
     data = read_img_emr(config.labelfile, config.coords_path, config.img_path, config.emr_path)
 
 elif config.model_type == 'clip':
