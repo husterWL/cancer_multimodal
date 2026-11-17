@@ -1,0 +1,5 @@
+-r requirements.txt
+transformers>=4.30,<5
+h5py>=3.8
+open_clip_torch
+safetensors
