@@ -1,0 +1,11 @@
+{
+  "synthetic": true,
+  "seed": 20261104,
+  "patients": 20,
+  "clinical_columns": 28,
+  "folds": 5,
+  "image_feature_dimension": 512,
+  "concepts": 22,
+  "source": "Independent pseudorandom numbers; no patient inputs",
+  "warning": "Not clinical images, encoder outputs, study folds or clinical evidence"
+}
